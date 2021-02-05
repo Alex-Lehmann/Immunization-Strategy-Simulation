@@ -3,21 +3,14 @@
 library(tools)
 
 loadPackages = function(packages){
-  i = 1
+  
+  # Check each passed package for required dependencies and add to list of packages to load
   dependencies = NULL
   for (pkg in packages){
-    # Check each passed package for required dependencies and add to list of packages to load
-    dependencies = c(dependencies, unlist(package_dependencies(packages[i], recursive=FALSE, which=c("Depends", "Imports", "LinkingTo"))))
+    dependencies = c(dependencies, unlist(package_dependencies(pkg, recursive=FALSE, which=c("Depends", "Imports", "LinkingTo"))))
   }
-  
-  # while(i <= length(packages)){
-  #   
-  #   # Check each passed package for required dependencies and add to list of packages to load
-  #   dependencies = c(dependencies, unlist(package_dependencies(packages[i], recursive=FALSE, which=c("Depends", "Imports", "LinkingTo"))))
-  #   i = i + 1
-  # }
   toLoad = rev(unique(c(packages, dependencies)))
-  print(toLoad)
+  
   # Attach required packages
   for (pkg in toLoad){ # Try to load from global library
     
@@ -31,7 +24,8 @@ loadPackages = function(packages){
         install.packages(pkg, lib=getwd())
       }
       
-      library(pkg, lib.loc=getwd(), character.only=TRUE) # Load from local directory
+      # Load from local directory
+      library(pkg, lib.loc=getwd(), character.only=TRUE, logical.return=TRUE)
       print(paste0("Package '", pkg, "' loaded from local directory"))
     }
   }
