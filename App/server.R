@@ -1,5 +1,5 @@
 library(shiny)
-library(sortable)
+library(sortable, lib.loc="lib")
 library(shinyWidgets)
 
 # Define server logic required to draw a histogram
