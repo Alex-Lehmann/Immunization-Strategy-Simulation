@@ -1,6 +1,4 @@
 library(shiny)
-library(sortable, lib.loc="lib")
-library(shinyWidgets)
 
 shinyUI(fluidPage(
     

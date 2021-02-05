@@ -1,8 +1,11 @@
 library(shiny)
-library(sortable, lib.loc="lib")
-library(shinyWidgets)
 
-# Define server logic required to draw a histogram
+# Load packages
+packages = c("sortable")
+
+source("fn/loadPackages.R")
+loadPackages(packages)
+
 shinyServer(function(input, output, session){
     
     #######################################################################################
