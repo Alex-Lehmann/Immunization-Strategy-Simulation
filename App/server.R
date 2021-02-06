@@ -15,12 +15,12 @@ shinyServer(function(input, output, session){
     observeEvent(input$summaryCases,{
         updateTabsetPanel(session, "summaryTabs", selected="cases")
     })
-
+    
     # Change to deaths
     observeEvent(input$summaryDeaths,{
         updateTabsetPanel(session, "summaryTabs", selected="deaths")
     })
-
+    
     # Change to vaccinated
     observeEvent(input$summaryVax,{
         updateTabsetPanel(session, "summaryTabs", selected="vax")
@@ -74,15 +74,15 @@ shinyServer(function(input, output, session){
     # Dialog definition
     priorityModal = function(){
         modalDialog(title="Edit Vaccine Priority", size="l", footer=modalButton("Close Window"),
-            helpText(HTML("<h4>1. Select priority groups</h4>")),
-            uiOutput("uiPriorityAgeGroups"),
-            uiOutput("uiPriorityInstitutional"),
-            
-            helpText(HTML("<h4>2. Set priority order</h4>")),
-            uiOutput("uiPriorityRankList"),
-            
-            helpText(HTML("<h4>3. Select criterion for remaining persons</h4>")),
-            uiOutput("uiPriorityRemaining")
+                    helpText(HTML("<h4>1. Select priority groups</h4>")),
+                    uiOutput("uiPriorityAgeGroups"),
+                    uiOutput("uiPriorityInstitutional"),
+                    
+                    helpText(HTML("<h4>2. Set priority order</h4>")),
+                    uiOutput("uiPriorityRankList"),
+                    
+                    helpText(HTML("<h4>3. Select criterion for remaining persons</h4>")),
+                    uiOutput("uiPriorityRemaining")
         )
     }
     
@@ -98,10 +98,7 @@ shinyServer(function(input, output, session){
     output$summaryCasesLabel = renderText({paste0("<h3><b>Total Cases</h3><h4>", format(10246556, big.mark=","), "</h4></b>")})
     output$summaryDeathsLabel = renderText({paste0("<h3><b>Total Deaths</h3><h4>", format(204931, big.mark=","), "</h4></b>")})
     output$summaryVaxLabel = renderText({paste0("<h3><b>Total Vaccinated</h3><h4>", format(14745040, big.mark=","), "</h4></b>")})
-    output$greenMap = renderImage({list(src="mockup/age 35-39.png", contentType="image/png", height="100%")}, deleteFile=FALSE)
-    output$redMap = renderImage({list(src="mockup/deathRate.png", contentType="image/png", height="100%")}, deleteFile=FALSE)
     output$phuCasesLabel = renderText({paste0("<h3><b>Local Cases</h3><h4>", format(679054, big.mark=","), "</h4></b>")})
     output$phuDeathsLabel = renderText({paste0("<h3><b>Local Deaths</h3><h4>", format(20372, big.mark=","), "</h4></b>")})
     output$phuVaxLabel = renderText({paste0("<h3><b>Local Vaccinated</h3><h4>", format(988681, big.mark=","), "</h4></b>")})
-    output$sickPlot = renderImage({list(src="mockup/sickPlot.png", contentType="image/png", height="100%")}, deleteFile=FALSE)
 })
