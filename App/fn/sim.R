@@ -93,7 +93,7 @@ sim_iter = function(doses=82800, simState, scaleFactor=1){
   nExposed = round((nContagious * 1.05) / 2) # Simulate exposures; divide by two since cases last two weeks
   if (nExposed > nExposable) {nExposed = nExposable}
   toExpose = simState %>%
-    filter(State %in% -1:26) %>%
+    filter(State == 0) %>%
     pull(UID) %>%
     sample(nExposed)
   
