@@ -15,7 +15,7 @@ shinyServer(function(input, output, session){
     # Simulation ##########################################################################
     observeEvent(input$runSimBn,{
         
-        nIter = 39
+        nIter = 40
         results = tibble(Iteration = 0,
                          Total_Cases = 0,
                          Total_Deaths = 0,
@@ -35,13 +35,14 @@ shinyServer(function(input, output, session){
         }
         print("Simulation complete")
         
-        # Process summary results and update summary button labels
+        # Process summary results
         results = results %>%
             mutate(New_Cases = c(NA, diff(Total_Cases)),
                    New_Deaths = c(NA, diff(Total_Deaths)),
                    New_Vax = c(NA, diff(Total_Vax)))
         values$simResults = results
-            
+        
+        # Update summary buttons
         simEnd = slice_tail(results, n=1)
         simCases = simEnd$Total_Cases
         simDeaths = simEnd$Total_Deaths
@@ -50,7 +51,6 @@ shinyServer(function(input, output, session){
         updateActionButton(session, "summaryCases", label=HTML(paste0("<h3><b>Total Cases</h3><h4>", format(simCases, big.mark=","), "</h4></b>")))
         updateActionButton(session, "summaryDeaths", label=HTML(paste0("<h3><b>Total Deaths</h3><h4>", format(simDeaths, big.mark=","), "</h4></b>")))
         updateActionButton(session, "summaryVax", label=HTML(paste0("<h3><b>Total Vaccinated</h3><h4>", format(simVax, big.mark=","), "</h4></b>")))
-        
         updateTabsetPanel(session, "summaryTabs", "cases")
     })
     
