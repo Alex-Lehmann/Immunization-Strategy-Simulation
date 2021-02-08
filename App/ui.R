@@ -134,5 +134,4 @@ shinyUI(fluidPage(
                         )
                )
     )
-    
 ))

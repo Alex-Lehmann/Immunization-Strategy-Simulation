@@ -86,18 +86,18 @@ sim_iter = function(doses=82800, simState, scaleFactor=1){
     summarize(n()) %>%
     pull(`n()`)
   nExposable = simState %>% # Get number of exposable persons
-    filter(State == 0) %>%
+    filter(State %in% c(0, -1)) %>%
     summarize(n()) %>%
     pull(`n()`)
   
-  nExposed = round((nContagious * 1.05) / 2) # Simulate exposures; divide by two since cases last two weeks
+  nExposed = rgamma(1, 0.5 * nContagious * 1.05, 1) # Simulate exposures; divide by two since cases last two weeks
   if (nExposed > nExposable) {nExposed = nExposable}
   toExpose = simState %>%
-    filter(State == 0) %>%
+    filter(State %in% c(0,-1)) %>%
     pull(UID) %>%
     sample(nExposed)
   
-  simState = mutate(simState, State = ifelse(UID %in% toExpose & State == 0 , 29, State)) # Update agents
+  simState = mutate(simState, State = ifelse(UID %in% toExpose & State == 0, 29, State)) # Update agents
   simState = mutate(simState, Infections = ifelse(State == 29, Infections + 1, Infections))
   
   # Progress cases
