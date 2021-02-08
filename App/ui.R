@@ -100,8 +100,8 @@ shinyUI(fluidPage(
                                                             # Initial case load
                                                             column(width=3,
                                                                    helpText(HTML("<h4>Initial Case Load</h4>")),
-                                                                   numericInput("paramOriginal", "Original Strain",
-                                                                                value=4800, min=0),
+                                                                   numericInput("paramOriginal", "Cases",
+                                                                                value=4800, min=0)
                                                             ),
                                                             
                                                             # Vaccine efficacy settings

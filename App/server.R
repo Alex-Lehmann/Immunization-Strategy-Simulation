@@ -22,13 +22,13 @@ shinyServer(function(input, output, session){
         progress=0
         nIter = 40
         results = tibble(Iteration = 0,
-                         Total_Cases = 0,
+                         Total_Cases = input$paramOriginal,
                          Total_Deaths = 0,
                          Total_Vax = 0)
         
         # Display busy dialog
         progress = 0
-        show_modal_progress_line(value=0, text="Generating Agents...", duration=0, easing="easeInOut")
+        show_modal_progress_circle(value=0, text="Generating agents...", duration=0, easing="easeInOut")
         
         # Generate agents
         print("Generating agents")

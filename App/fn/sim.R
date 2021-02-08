@@ -33,8 +33,8 @@ sim_make_agents = function(cases=4800, strategy="random", scaleFactor=1){
   nCases = round(cases / scaleFactor)
   nWeek1 = rbinom(1, nCases, 0.5)
   nWeek2 = nCases - nWeek1
-  agents$State = sample(c(rep(0, totalAgents - nCases), rep(28, nWeek1), rep(27, nWeek2)))
-  agents = mutate(agents, Infections = ifelse(State %in% c(2, 1), 1, 0))
+  agents$State = sample(c(rep(0, totalAgents - nCases), rep(26, nWeek1), rep(25, nWeek2)))
+  agents = mutate(agents, Infections = ifelse(State %in% c(25, 26), 1, 0))
   
   # Determine priority order
   switch(strategy,
@@ -50,10 +50,10 @@ sim_make_agents = function(cases=4800, strategy="random", scaleFactor=1){
 ###########################################################################################
 # Agent states:
 #   * 0:  base state
-#   *29: new case
-#   *28; first week
-#   *27: second week
-#   *1-26: post-infection immunity
+#   *27: new case
+#   *26; first week
+#   *25: second week
+#   *1-24: post-infection immunity
 #   *-1: vaccinated
 #   *-2: dead
 sim_iter = function(doses=82800, simState, scaleFactor=1){
@@ -61,7 +61,7 @@ sim_iter = function(doses=82800, simState, scaleFactor=1){
   
   # Vaccinate uninfected agents
   toVax = simState %>% # Grab highest-priority uninfected persons
-    filter(State %in% 0:26) %>%
+    filter(State %in% 0:24) %>%
     arrange(Ticket) %>%
     slice_head(n=rpois(1, doses)) %>%
     pull(UID)
@@ -70,7 +70,7 @@ sim_iter = function(doses=82800, simState, scaleFactor=1){
   
   # Kill off fatal cases
   atRisk = simState %>% # Grab infected agents
-    filter(State > 26) %>%
+    filter(State > 24) %>%
     select(UID, Risk)
   nAtRisk = nrow(atRisk)
   
@@ -83,7 +83,7 @@ sim_iter = function(doses=82800, simState, scaleFactor=1){
   
   # Spread virus
   nContagious = simState %>% # Get number of contagious agents
-    filter(State > 26) %>%
+    filter(State > 24) %>%
     summarize(n()) %>%
     pull(`n()`)
   nExposable = simState %>% # Get number of exposable persons
@@ -91,15 +91,15 @@ sim_iter = function(doses=82800, simState, scaleFactor=1){
     summarize(n()) %>%
     pull(`n()`)
   
-  nExposed = rgamma(1, 0.5 * nContagious * 1.05, 1) # Simulate exposures; divide by two since cases last two weeks
+  nExposed = round(rgamma(1, 0.5 * nContagious * 1.05, 1)) # Simulate exposures; divide by two since cases last two weeks
   if (nExposed > nExposable) {nExposed = nExposable}
   toExpose = simState %>%
     filter(State %in% c(0,-1)) %>%
     pull(UID) %>%
     sample(nExposed)
   
-  simState = mutate(simState, State = ifelse(UID %in% toExpose & (State == 0 | (State == -1 & rbinom(1, 1, vaxEff) == 0)), 29, State)) # Update agents
-  simState = mutate(simState, Infections = ifelse(State == 29, Infections + 1, Infections))
+  simState = mutate(simState, State = ifelse(UID %in% toExpose & (State == 0 | (State == -1 & rbinom(1, 1, vaxEff) == 0)), 27, State)) # Update agents
+  simState = mutate(simState, Infections = ifelse(State == 27, Infections + 1, Infections))
   
   # Progress cases
   simState = mutate(simState, State = ifelse(State > 0, State - 1, State))
