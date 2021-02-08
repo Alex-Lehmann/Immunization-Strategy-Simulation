@@ -118,8 +118,12 @@ shinyUI(fluidPage(
                                                                                list("Highest-Risk First" = "risk",
                                                                                     "Random" = "random"))
                                                             ),
+                                                            
+                                                            # Simulation settings
                                                             column(width=3,
-                                                                   helpText(HTML("<h4>Simulation Performance</h4>")),
+                                                                   helpText(HTML("<h4>Simulation Settings</h4>")),
+                                                                   numericInput("paramSeed", "Seed Value",
+                                                                                value=NA, min=0, step=1),
                                                                    numericInput("paramScaling", "Agent Scaling Factor",
                                                                                 value=10, min=1, max=20, step=1)
                                                             )

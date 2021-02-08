@@ -15,6 +15,10 @@ shinyServer(function(input, output, session){
     # Simulation ##########################################################################
     observeEvent(input$runSimBn,{
         
+        # Random seed
+        if (!is.na(input$paramSeed)){ set.seed(input$paramSeed) } else { set.seed(NULL) }
+        
+        # Simulation initial conditions
         progress=0
         nIter = 40
         results = tibble(Iteration = 0,
@@ -149,5 +153,8 @@ shinyServer(function(input, output, session){
     observeEvent(input$summaryVax,{
         updateTabsetPanel(session, "summaryTabs", selected="vax")
     })
+    #######################################################################################
+    # Clear random seed button ############################################################
+    observeEvent(input$paramSeedBn,{updateNumericInput(session, "paramSeed", value=NA)})
     #######################################################################################
 })
