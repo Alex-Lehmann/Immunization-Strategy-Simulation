@@ -4,6 +4,7 @@ reference = tibble(AgeGroup =   c("under20", "20s"  , "30s"  , "40s"  , "50s"  ,
                    Population = c(3028125  , 1772750, 1711035, 1813875, 2053490, 1591725, 926075, 594645),
                    Risk = c(2/34355, 8/54757, 17/41002, 51/37089, 196/38353, 554/24446, 1200/13176, 4454/18227))
 
+vaxEff = 0.95
 ###########################################################################################
 ###########################################################################################
 sim_make_agents = function(cases=4800, strategy="random", scaleFactor=1){
@@ -62,7 +63,7 @@ sim_iter = function(doses=82800, simState, scaleFactor=1){
   toVax = simState %>% # Grab highest-priority uninfected persons
     filter(State %in% 0:26) %>%
     arrange(Ticket) %>%
-    slice_head(n=doses) %>%
+    slice_head(n=rpois(1, doses)) %>%
     pull(UID)
   
   simState = mutate(simState, State = ifelse(UID %in% toVax, -1, State)) # Update agents
@@ -97,7 +98,7 @@ sim_iter = function(doses=82800, simState, scaleFactor=1){
     pull(UID) %>%
     sample(nExposed)
   
-  simState = mutate(simState, State = ifelse(UID %in% toExpose & State == 0, 29, State)) # Update agents
+  simState = mutate(simState, State = ifelse(UID %in% toExpose & (State == 0 | (State == -1 & rbinom(1, 1, vaxEff) == 0)), 29, State)) # Update agents
   simState = mutate(simState, Infections = ifelse(State == 29, Infections + 1, Infections))
   
   # Progress cases
