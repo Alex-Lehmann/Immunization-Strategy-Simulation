@@ -1,7 +1,7 @@
 library(shiny)
 
 # Load packages
-packages = c("sortable", "tidyverse")
+packages = c("sortable", "tidyverse", "shinybusy")
 
 source("fn/loadPackages.R")
 loadPackages(packages)
@@ -15,24 +15,36 @@ shinyServer(function(input, output, session){
     # Simulation ##########################################################################
     observeEvent(input$runSimBn,{
         
+        progress=0
         nIter = 40
         results = tibble(Iteration = 0,
                          Total_Cases = 0,
                          Total_Deaths = 0,
                          Total_Vax = 0)
         
+        # Display busy dialog
+        progress = 0
+        show_modal_progress_line(value=0, text="Generating Agents...", duration=0, easing="easeInOut")
+        
         # Generate agents
         print("Generating agents")
         agents = sim_make_agents(input$paramOriginal, input$paramStrategy, input$paramScaling)
         
+        progress = 1/5
+        update_modal_progress(value=progress)
+        
         # Run simulation
         for (i in 1:nIter){
+            progress = progress + 1/50
+            update_modal_progress(value=progress, text=paste0("Simulating iteration ", i," of 40..."))
+            
             print(paste0("Starting iteration ", i))
             agents = sim_iter(input$paramVax, agents, input$paramScaling)
             
             results = rbind(results, sim_results(agents, i, input$paramScaling))
             print(paste0("Iteration ", i, " complete"))
         }
+        update_modal_progress(value=1, text="Simulation complete")
         print("Simulation complete")
         
         # Process summary results
@@ -52,6 +64,9 @@ shinyServer(function(input, output, session){
         updateActionButton(session, "summaryDeaths", label=HTML(paste0("<h3><b>Total Deaths</h3><h4>", format(simDeaths, big.mark=","), "</h4></b>")))
         updateActionButton(session, "summaryVax", label=HTML(paste0("<h3><b>Total Vaccinated</h3><h4>", format(simVax, big.mark=","), "</h4></b>")))
         updateTabsetPanel(session, "summaryTabs", "cases")
+        
+        # Close busy dialog
+        remove_modal_progress()
     })
     
     #######################################################################################
