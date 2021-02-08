@@ -72,15 +72,6 @@ sim_make_agents = function(cases=4800, strategy="random", scaleFactor=1){
 sim_iter = function(doses=82800, simState, scaleFactor=1){
   doses = round(doses / scaleFactor)
   
-  # Vaccinate uninfected agents
-  toVax = simState %>% # Grab highest-priority uninfected persons
-    filter(State %in% 0:24) %>%
-    arrange(Ticket) %>%
-    slice_head(n=rpois(1, doses)) %>%
-    pull(UID)
-  
-  simState = mutate(simState, State = ifelse(UID %in% toVax, -1, State)) # Update agents
-  
   # Kill off fatal cases
   atRisk = simState %>% # Grab infected agents
     filter(State > 24) %>%
@@ -116,6 +107,17 @@ sim_iter = function(doses=82800, simState, scaleFactor=1){
   
   # Progress cases
   simState = mutate(simState, State = ifelse(State > 0, State - 1, State))
+  
+  # Vaccinate uninfected agents
+  if (doses != 0){
+    toVax = simState %>% # Grab highest-priority uninfected persons
+      filter(State %in% 0:24) %>%
+      arrange(Ticket) %>%
+      slice_head(n=rpois(1, doses)) %>%
+      pull(UID)
+    
+    simState = mutate(simState, State = ifelse(UID %in% toVax, -1, State)) # Update agents
+  }
   
   return(simState)
 }
