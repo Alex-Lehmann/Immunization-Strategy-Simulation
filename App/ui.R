@@ -97,22 +97,15 @@ shinyUI(fluidPage(
                                                         
                                                         fluidRow(
                                                             
-                                                            # Initial case load
-                                                            column(width=3,
-                                                                   helpText(HTML("<h4>Initial Case Load</h4>")),
-                                                                   numericInput("paramOriginal", "Cases",
-                                                                                value=4800, min=0)
-                                                            ),
-                                                            
                                                             # Vaccine efficacy settings
-                                                            column(width=3,
+                                                            column(width=4,
                                                                    helpText(HTML("<h4>Provincial Vaccine Availability</h4>")),
                                                                    numericInput("paramVax", "Vaccine Doses Per Week",
                                                                                 value=82800, step=100)
                                                             ),
                                                             
                                                             # Vaccination strategy settings
-                                                            column(width=3,
+                                                            column(width=4,
                                                                    helpText(HTML("<h4>Distribution Strategy</h4>")),
                                                                    selectInput("paramStrategy", "Preset",
                                                                                list("Highest-Risk First" = "risk",
@@ -120,10 +113,10 @@ shinyUI(fluidPage(
                                                             ),
                                                             
                                                             # Simulation settings
-                                                            column(width=3,
+                                                            column(width=4,
                                                                    helpText(HTML("<h4>Simulation Settings</h4>")),
                                                                    numericInput("paramSeed", "Seed Value",
-                                                                                value=NA, min=0, step=1),
+                                                                                value=7, min=0, step=1),
                                                                    numericInput("paramScaling", "Agent Scaling Factor",
                                                                                 value=10, min=1, max=20, step=1)
                                                             )

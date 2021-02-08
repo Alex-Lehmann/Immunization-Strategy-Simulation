@@ -11,7 +11,7 @@ confCases = read_csv("refData/conposcovidloc.csv", col_types=cols()) %>%
 vaxEff = 0.95
 ###########################################################################################
 ###########################################################################################
-sim_make_agents = function(cases=4800, strategy="random", scaleFactor=1){
+sim_make_agents = function(strategy="random", scaleFactor=1){
   
   # Find individuals with active infections or natural immunity
   caseStatus = confCases %>%
