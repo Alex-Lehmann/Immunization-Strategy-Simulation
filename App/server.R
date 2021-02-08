@@ -10,9 +10,27 @@ source("fn/sim.R")
 print("Server ready")
 shinyServer(function(input, output, session){
     values = reactiveValues()
+    values$hasRun = FALSE
     #######################################################################################
     # Simulation ##########################################################################
     observeEvent(input$runSimBn,{
+        
+        # Localize dangerous inputs
+        paramVax = input$paramVax
+        paramScaling = input$paramScaling
+        
+        # Validate inputs
+        if (input$paramVax < 0){
+            updateNumericInput(session, "paramVax", value=0)
+            paramVax = 0
+        }
+        if (input$paramScaling < 1){
+            updateNumericInput(session, "paramScaling", value=1)
+            paramScaling = 1
+        } else if (input$paramScaling > 20){
+            updateNumericInput(session, "paramScaling", value=20)
+            paramScaling = 20
+        }
         
         # Random seed
         if (!is.na(input$paramSeed)){ set.seed(input$paramSeed) } else { set.seed(NULL) }
@@ -21,7 +39,7 @@ shinyServer(function(input, output, session){
         progress=0
         nIter = 40
         results = tibble(Iteration = 0,
-                         Total_Cases = input$paramOriginal,
+                         Total_Cases = 0,
                          Total_Deaths = 0,
                          Total_Vax = 0)
         
@@ -31,7 +49,7 @@ shinyServer(function(input, output, session){
         
         # Generate agents
         print("Generating agents")
-        agents = sim_make_agents(input$paramOriginal, input$paramStrategy, input$paramScaling)
+        agents = sim_make_agents(input$paramStrategy, paramScaling)
         
         progress = 1/5
         update_modal_progress(value=progress)
@@ -42,9 +60,9 @@ shinyServer(function(input, output, session){
             update_modal_progress(value=progress, text=paste0("Simulating iteration ", i," of 40..."))
             
             print(paste0("Starting iteration ", i))
-            agents = sim_iter(input$paramVax, agents, input$paramScaling)
+            agents = sim_iter(paramVax, agents, paramScaling)
             
-            results = rbind(results, sim_results(agents, i, input$paramScaling))
+            results = rbind(results, sim_results(agents, i, paramScaling))
             print(paste0("Iteration ", i, " complete"))
         }
         update_modal_progress(value=1, text="Simulation complete")
@@ -70,6 +88,8 @@ shinyServer(function(input, output, session){
         
         # Close busy dialog
         remove_modal_progress()
+        
+        values$hasRun = TRUE
     })
     
     #######################################################################################
@@ -139,19 +159,13 @@ shinyServer(function(input, output, session){
     # Results summary button variable handlers ############################################
     
     # Change to cases
-    observeEvent(input$summaryCases,{
-        updateTabsetPanel(session, "summaryTabs", selected="cases")
-    })
+    observeEvent(input$summaryCases,{ if (values$hasRun) { updateTabsetPanel(session, "summaryTabs", selected="cases") }})
     
     # Change to deaths
-    observeEvent(input$summaryDeaths,{
-        updateTabsetPanel(session, "summaryTabs", selected="deaths")
-    })
+    observeEvent(input$summaryDeaths,{ if (values$hasRun) { updateTabsetPanel(session, "summaryTabs", selected="deaths") }})
     
     # Change to vaccinated
-    observeEvent(input$summaryVax,{
-        updateTabsetPanel(session, "summaryTabs", selected="vax")
-    })
+    observeEvent(input$summaryVax,{ if (values$hasRun) { updateTabsetPanel(session, "summaryTabs", selected="vax") }})
     #######################################################################################
     # Clear random seed button ############################################################
     observeEvent(input$paramSeedBn,{updateNumericInput(session, "paramSeed", value=NA)})
