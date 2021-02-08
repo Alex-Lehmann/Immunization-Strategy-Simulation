@@ -1,11 +1,10 @@
 library(shiny)
 
 # Load packages
-packages = c("sortable", "tidyverse", "shinybusy")
+packages = c("tidyverse", "shinybusy")
 
 source("fn/loadPackages.R")
 loadPackages(packages)
-
 source("fn/sim.R")
 
 print("Server ready")

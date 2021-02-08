@@ -4,10 +4,28 @@ reference = tibble(AgeGroup =   c("under20", "20s"  , "30s"  , "40s"  , "50s"  ,
                    Population = c(3028125  , 1772750, 1711035, 1813875, 2053490, 1591725, 926075, 594645),
                    Risk = c(2/34355, 8/54757, 17/41002, 51/37089, 196/38353, 554/24446, 1200/13176, 4454/18227))
 
+confCases = read_csv("refData/conposcovidloc.csv", col_types=cols()) %>%
+  select(Accurate_Episode_Date, Age_Group, Outcome1) %>%
+  mutate(Accurate_Episode_Date = as_date(Accurate_Episode_Date))
+
 vaxEff = 0.95
 ###########################################################################################
 ###########################################################################################
 sim_make_agents = function(cases=4800, strategy="random", scaleFactor=1){
+  
+  # Find individuals with active infections or natural immunity
+  caseStatus = confCases %>%
+    filter(Outcome1 == "Resolved",
+           Accurate_Episode_Date > as_date("2020-07-07"),
+           Accurate_Episode_Date < as_date("2021-01-01")) %>%
+    group_by(Week = week(Accurate_Episode_Date), Age_Group) %>%
+    summarize(Cases = n()) %>%
+    pivot_wider(names_from = Age_Group, values_from = Cases) %>%
+    replace_na(list(`70s` = 0, `80s` = 0, `90s` = 0)) %>%
+    mutate(over80 = `80s` + `90s`) %>%
+    rename(under20 = `<20`) %>%
+    select(-c(`NA`, UNKNOWN, `80s`, `90s`)) %>%
+    mutate(Immunity = Week - 27)
   
   # Generate simulated population
   agents = NULL
@@ -16,9 +34,11 @@ sim_make_agents = function(cases=4800, strategy="random", scaleFactor=1){
     
     # Generate new agents
     nAgents = round(constants$Population / scaleFactor)
+    stateCounts = round(pull(caseStatus, age) / scaleFactor)
+    states = sample(c(rep(0, nAgents - sum(stateCounts)), rep(1:26, stateCounts)))
     newAgents = tibble(UID = rep.int(0, nAgents),
                        AgeGroup = rep.int(age, nAgents),
-                       State = rep(-3, nAgents),
+                       State = states,
                        Risk = rep(constants$Risk, nAgents),
                        Infections = rep(0, nAgents),
                        Ticket = rep.int(0, nAgents))
@@ -28,13 +48,6 @@ sim_make_agents = function(cases=4800, strategy="random", scaleFactor=1){
   }
   totalAgents = nrow(agents)
   agents$UID = 1:totalAgents
-  
-  # Randomly distribute COVID cases
-  nCases = round(cases / scaleFactor)
-  nWeek1 = rbinom(1, nCases, 0.5)
-  nWeek2 = nCases - nWeek1
-  agents$State = sample(c(rep(0, totalAgents - nCases), rep(26, nWeek1), rep(25, nWeek2)))
-  agents = mutate(agents, Infections = ifelse(State %in% c(25, 26), 1, 0))
   
   # Determine priority order
   switch(strategy,
