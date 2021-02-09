@@ -166,8 +166,27 @@ shinyServer(function(input, output, session){
     
     # Change to vaccinated
     observeEvent(input$summaryVax,{ if (values$hasRun) { updateTabsetPanel(session, "summaryTabs", selected="vax") }})
+    
     #######################################################################################
     # Clear random seed button ############################################################
     observeEvent(input$paramSeedBn,{updateNumericInput(session, "paramSeed", value=NA)})
+    
+    #######################################################################################
+    # Help buttons ########################################################################
+    
+    # Parameters help
+    observeEvent(input$vaxHelpBn,{
+        updateTabsetPanel(session, "helpTabs", selected="vax")
+        updateTabsetPanel(session, "infoTabs", select="help")
+    })
+    observeEvent(input$strategyHelpBn,{
+        updateTabsetPanel(session, "helpTabs", select="strategy")
+        updateTabsetPanel(session, "infoTabs", select="help")
+    })
+    observeEvent(input$simHelpBn,{
+        updateTabsetPanel(session, "helpTabs", select="sim")
+        updateTabsetPanel(session, "infoTabs", select="help") 
+    })
+    
     #######################################################################################
 })
