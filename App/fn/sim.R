@@ -95,7 +95,7 @@ sim_iter = function(doses=82800, simState, scaleFactor=1){
     summarize(n()) %>%
     pull(`n()`)
   
-  nExposed = round(rgamma(1, 0.5 * nContagious * 1.05, 1)) # Simulate exposures; divide by two since cases last two weeks
+  nExposed = rpois(1, 0.5 * nContagious * 1.05) # Simulate exposures; divide by two since cases last two weeks
   if (nExposed > nExposable) {nExposed = nExposable}
   toExpose = simState %>%
     filter(State %in% c(0,-1)) %>%

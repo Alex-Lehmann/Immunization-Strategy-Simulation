@@ -1,5 +1,12 @@
 library(shiny)
 
+# Load packages
+packages = c("tidyverse", "shinybusy", "shinyWidgets", "plotly")
+
+source("fn/loadPackages.R")
+loadPackages(packages)
+source("fn/sim.R")
+
 shinyUI(fluidPage(
     navbarPage("Ontario COVID-19 Immunization Strategy Simulation",
                # Dashboard page
@@ -22,12 +29,12 @@ shinyUI(fluidPage(
                                                                                                  HTML("<br>Click the help buttons on the dashboard to display additional information about the simulation elements.")
                                                                                     ),
                                                                                     tabPanelBody(NULL, value="vax",
-                                                                                                 HTML("<h3>Provincial Vaccine Availability</h3><br>
+                                                                                                 HTML("<h3>Provincial Vaccine Availability</h3>
                                                                                                       <h4>Vaccine Doses Per Week</h4>
                                                                                                       <p>This parameter controls the mean number of vaccine doses administered per week. Passing a value of 0 results in a simulation with no vaccinations.")
                                                                                     ),
                                                                                     tabPanelBody(NULL, value="strategy",
-                                                                                                 HTML("<h3>Distribution Strategy</h3><br>
+                                                                                                 HTML("<h3>Distribution Strategy</h3>
                                                                                                       <h4>Presets</h4>
                                                                                                       <p>Users can select pre-built vaccine distribution strategies from this menu. The currently-supported presets are:
                                                                                                       <ul>
@@ -36,11 +43,11 @@ shinyUI(fluidPage(
                                                                                                       </ul>")
                                                                                     ),
                                                                                     tabPanelBody(NULL, value="sim",
-                                                                                                 HTML("<h3>Simulation Settings</h3><br>
+                                                                                                 HTML("<h3>Simulation Settings</h3>
                                                                                                       <h4>Seed Value</h4>
                                                                                                       <p>Users may pass a seed value to the simulation to ensure reproducible results. Pass an empty value to run the simulation without a seed value.
                                                                                                       <h4>Agent Scaling Factor</h4>
-                                                                                                      <p>This parameter allows users to increase the speed of the simulation procedure at the expense of some accuracy. Increase this value to increase computation speed, to a maximum of 20."))
+                                                                                                      <p>This parameter allows users to increase the speed of the simulation procedure at the expense of some accuracy. Increase this value to increase computation speed."))
                                                                         )
                                                                )
                                                    )
@@ -79,11 +86,11 @@ shinyUI(fluidPage(
                                                                                  fluidRow(
                                                                                    column(width=6, align="center",
                                                                                           HTML("<h2>Cumulative Cases</h2>"),
-                                                                                          plotOutput("summaryTotalCasesTS")
+                                                                                          plotlyOutput("summaryTotalCasesTS")
                                                                                    ),
                                                                                    column(width=6, align="center",
                                                                                           HTML("<h2>New Cases</h2>"),
-                                                                                          plotOutput("summaryNewCasesTS")
+                                                                                          plotlyOutput("summaryNewCasesTS")
                                                                                    )
                                                                                  )
                                                                     ),
@@ -93,11 +100,11 @@ shinyUI(fluidPage(
                                                                                  fluidRow(
                                                                                    column(width=6, align="center",
                                                                                           HTML("<h2>Cumulative Deaths</h2>"),
-                                                                                          plotOutput("summaryTotalDeathsTS")
+                                                                                          plotlyOutput("summaryTotalDeathsTS")
                                                                                    ),
                                                                                    column(width=6, align="center",
                                                                                           HTML("<h2>New Deaths</h2>"),
-                                                                                          plotOutput("summaryNewDeathsTS")
+                                                                                          plotlyOutput("summaryNewDeathsTS")
                                                                                    )
                                                                                  )
                                                                     ),
@@ -107,11 +114,11 @@ shinyUI(fluidPage(
                                                                                  fluidRow(
                                                                                    column(width=6, align="center",
                                                                                           HTML("<h2>Cumulative Vaccinations</h2>"),
-                                                                                          plotOutput("summaryTotalVaxTS")
+                                                                                          plotlyOutput("summaryTotalVaxTS")
                                                                                    ),
                                                                                    column(width=6, align="center",
                                                                                           HTML("<h2>New Vaccinations</h2>"),
-                                                                                          plotOutput("summaryNewVaxsTS")
+                                                                                          plotlyOutput("summaryNewVaxsTS")
                                                                                    )
                                                                                  )
                                                                     )
@@ -130,7 +137,7 @@ shinyUI(fluidPage(
                                                                        column(width=10,
                                                                               helpText(HTML("<h4>Provincial Vaccine Availability</h4>")) 
                                                                        ),
-                                                                       column(width=2,
+                                                                       column(width=2, align="right",
                                                                               actionButton("vaxHelpBn", NULL, icon("question"),
                                                                                            style="border-radius:100%")
                                                                        )
@@ -147,7 +154,7 @@ shinyUI(fluidPage(
                                                                      column(width=10, align="left",
                                                                             helpText(HTML("<h4>Distribution Strategy</h4>"))
                                                                      ),
-                                                                     column(width=2,
+                                                                     column(width=2, align="right",
                                                                             actionButton("strategyHelpBn", NULL, icon("question"),
                                                                                          style="border-radius:100%")
                                                                      )
@@ -165,7 +172,7 @@ shinyUI(fluidPage(
                                                                      column(width=10,
                                                                             helpText(HTML("<h4>Simulation Settings</h4>"))
                                                                      ),
-                                                                     column(width=2, align="left",
+                                                                     column(width=2, align="right",
                                                                             actionButton("simHelpBn", NULL, icon("question"),
                                                                                          style="border-radius:100%")
                                                                      )
@@ -173,8 +180,9 @@ shinyUI(fluidPage(
                                                                    
                                                                    numericInput("paramSeed", "Seed Value",
                                                                                 value=7, min=0, step=1),
-                                                                   numericInput("paramScaling", "Agent Scaling Factor",
-                                                                                value=10, min=1, max=20, step=1)
+                                                                   setSliderColor("#112446", 1),
+                                                                   sliderInput("paramScaling", "Agent Scaling Factor", ticks=FALSE,
+                                                                               value=10, min=1, max=20, step=1)
                                                             )
                                                         ),
                                                         

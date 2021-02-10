@@ -1,14 +1,7 @@
 library(shiny)
 
-# Load packages
-packages = c("tidyverse", "shinybusy")
-
-source("fn/loadPackages.R")
-loadPackages(packages)
-source("fn/sim.R")
-
-print("Server ready")
 shinyServer(function(input, output, session){
+    
     values = reactiveValues()
     values$hasRun = FALSE
     #######################################################################################
@@ -20,7 +13,7 @@ shinyServer(function(input, output, session){
         paramScaling = input$paramScaling
         
         # Validate inputs
-        if (input$paramVax < 0){
+        if (is.na(input$paramVax) | input$paramVax < 0){
             updateNumericInput(session, "paramVax", value=0)
             paramVax = 0
         }
@@ -39,9 +32,9 @@ shinyServer(function(input, output, session){
         progress=0
         nIter = 40
         results = tibble(Iteration = 0,
-                         Total_Cases = 0,
-                         Total_Deaths = 0,
-                         Total_Vax = 0)
+                         `Total Cases` = 0,
+                         `Total Deaths` = 0,
+                         `Total Vaccinations` = 0)
         
         # Display busy dialog
         progress = 0
@@ -70,16 +63,16 @@ shinyServer(function(input, output, session){
         
         # Process summary results
         results = results %>%
-            mutate(New_Cases = c(NA, diff(Total_Cases)),
-                   New_Deaths = c(NA, diff(Total_Deaths)),
-                   New_Vax = c(NA, diff(Total_Vax)))
+            mutate(`New Cases` = c(NA, diff(`Total Cases`)),
+                   `New Deaths` = c(NA, diff(`Total Deaths`)),
+                   `New Vaccinations` = c(NA, diff(`Total Vaccinations`)))
         values$simResults = results
         
         # Update summary buttons
         simEnd = slice_tail(results, n=1)
-        simCases = simEnd$Total_Cases
-        simDeaths = simEnd$Total_Deaths
-        simVax = simEnd$Total_Vax
+        simCases = simEnd$`Total Cases`
+        simDeaths = simEnd$`Total Deaths`
+        simVax = simEnd$`Total Vaccinations`
         
         updateActionButton(session, "summaryCases", label=HTML(paste0("<h3><b>Total Cases</h3><h4>", format(simCases, big.mark=","), "</h4></b>")))
         updateActionButton(session, "summaryDeaths", label=HTML(paste0("<h3><b>Total Deaths</h3><h4>", format(simDeaths, big.mark=","), "</h4></b>")))
@@ -96,63 +89,90 @@ shinyServer(function(input, output, session){
     # Summary plots #######################################################################
     
     # Cases time series
-    output$summaryTotalCasesTS = renderPlot({
-        values$simResults %>%
-            filter(!is.na(Total_Cases)) %>%
-            ggplot( aes(x=Iteration, y=Total_Cases)) +
-            geom_point(color="#4CAF50", size=4) +
-            geom_line(color="#4CAF50", size=2) +
-            geom_area(fill="#4CAF50", alpha=0.2) +
+    output$summaryTotalCasesTS = renderPlotly({
+        plot = values$simResults %>%
+            filter(!is.na(`Total Cases`)) %>%
+            ggplot( aes(x=Iteration, y=`Total Cases`)) +
+            geom_point(color="#4CAF50") +
+            geom_line(color="#4CAF50") +
             ylab("Cumulative COVID-19 Cases")
+        ggplotly(plot) %>%
+            layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
+                   xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
     })
     
-    output$summaryNewCasesTS = renderPlot({
-        values$simResults %>%
-            filter(!is.na(New_Cases)) %>%
-            ggplot(aes(x=Iteration, y=New_Cases)) +
-            geom_point(color="#4CAF50", size=4) +
-            geom_line(color="#4CAF50", size=2) +
+    output$summaryNewCasesTS = renderPlotly({
+        plot = values$simResults %>%
+            filter(!is.na(`New Cases`)) %>%
+            ggplot(aes(x=Iteration, y=`New Cases`)) +
+            geom_point(color="#4CAF50") +
+            geom_line(color="#4CAF50") +
             ylab("New COVID-19 Cases")
+        ggplotly(plot) %>%
+            layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
+                   xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
     })
     
     # Deaths time series
-    output$summaryTotalDeathsTS = renderPlot({
-        values$simResults %>%
-            filter(!is.na(Total_Deaths)) %>%
-            ggplot(aes(x=Iteration, y=Total_Deaths)) +
-            geom_point(color="#DC2824", size=4) +
-            geom_line(color="#DC2824", size=2) +
-            geom_area(fill="#DC2824", alpha=0.2) +
+    output$summaryTotalDeathsTS = renderPlotly({
+        plot = values$simResults %>%
+            filter(!is.na(`Total Deaths`)) %>%
+            ggplot(aes(x=Iteration, y=`Total Deaths`)) +
+            geom_point(color="#DC2824") +
+            geom_line(color="#DC2824") +
             ylab("Cumulative COVID-19 Deaths")
+        ggplotly(plot) %>%
+            layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
+                   xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
     })
     
-    output$summaryNewDeathsTS = renderPlot({
-        values$simResults %>%
-            filter(!is.na(New_Deaths)) %>%
-            ggplot(aes(x=Iteration, y=New_Deaths)) +
-            geom_point(color="#DC2824", size=4) +
-            geom_line(color="#DC2824", size=2) +
+    output$summaryNewDeathsTS = renderPlotly({
+        plot = values$simResults %>%
+            filter(!is.na(`New Deaths`)) %>%
+            ggplot(aes(x=Iteration, y=`New Deaths`)) +
+            geom_point(color="#DC2824") +
+            geom_line(color="#DC2824") +
             ylab("New COVID-19 Deaths")
+        ggplotly(plot) %>%
+            layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
+                   xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
     })
     
-    # Vacinations time series
-    output$summaryTotalVaxTS = renderPlot({
-        values$simResults %>%
-            filter(!is.na(Total_Vax)) %>%
-            ggplot(aes(x=Iteration, y=Total_Vax)) +
-            geom_point(color="#428BCA", size=4) +
-            geom_line(color="#428BCA", size=2) +
-            geom_area(fill="#428BCA", alpha=0.2) +
+    # Vaccinations time series
+    output$summaryTotalVaxTS = renderPlotly({
+        plot = values$simResults %>%
+            filter(!is.na(`Total Vaccinations`)) %>%
+            ggplot(aes(x=Iteration, y=`Total Vaccinations`)) +
+            geom_point(color="#428BCA") +
+            geom_line(color="#428BCA") +
             ylab("Cumulative COVID-19 Vaccinations")
+        ggplotly(plot) %>%
+            layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
+                   xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
     })
     
-    output$summaryNewVaxsTS = renderPlot({
-        values$simResults %>%
-            filter(!is.na(New_Vax)) %>%
-            ggplot(aes(x=Iteration, y=New_Vax)) +
-            geom_point(color="#428BCA", size=4) +
-            geom_line(color="#428BCA", size=2) +
+    output$summaryNewVaxsTS = renderPlotly({
+        plot = values$simResults %>%
+            filter(!is.na(`New Vaccinations`)) %>%
+            ggplot(aes(x=Iteration, y=`New Vaccinations`)) +
+            geom_point(color="#428BCA") +
+            geom_line(color="#428BCA") +
             ylab("New COVID-19 Vaccinations")
+        ggplotly(plot) %>%
+            layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
+                   xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
     })
     
     #######################################################################################
