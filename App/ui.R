@@ -8,6 +8,8 @@ loadPackages(packages)
 source("fn/sim.R")
 
 shinyUI(fluidPage(
+    # Global page settings
+    chooseSliderSkin("Shiny", "#112446"),
     
     navbarPage("Ontario COVID-19 Immunization Strategy Simulation",
                # Dashboard page
@@ -18,21 +20,25 @@ shinyUI(fluidPage(
                                       # Information side panel
                                       sidebarPanel(width=3, style = "position:fixed; width:inherit;",
                                                    titlePanel("Information"),
-                                                   
                                                    tabsetPanel(type="tabs", id="infoTabs",
                                                                
+                                                               # General information
                                                                tabPanel("About", value="about",
                                                                         HTML("<br><p>This app displays the results of different COVID-19 vaccination strategies in Ontario under a variety of simulated conditions. This allows users to quickly and easily review different vaccination strategies under different initial conditions to better inform decision making in the pandemic response.
                                                                               <p>Click on the help buttons for details about dashboard elements. Detailed and reference information is available on the Data and Assumptions page.
                                                                               <h3>Contact</h3>"),
+                                                                        # LinkedIn badge
                                                                         fluidRow(width=12, align="center",
                                                                           HTML("<script type='text/javascript' src='https://platform.linkedin.com/badges/js/profile.js' async defer></script>
-                                                                               <div class='LI-profile-badge'  data-version='v1' data-size='large' data-locale='en_US' data-type='vertical' data-theme='light' data-vanity='alex-lehmann-ds'><a class='LI-simple-link' href='https://ca.linkedin.com/in/alex-lehmann-ds?trk=profile-badge'>Alex Lehmann</a></div>"),
+                                                                               <div class='LI-profile-badge' data-version='v1' data-size='large' data-locale='en_US' data-type='vertical' data-theme='light' data-vanity='alex-lehmann-ds'><a class='LI-simple-link' href='https://ca.linkedin.com/in/alex-lehmann-ds?trk=profile-badge'>Alex Lehmann</a></div>"),
                                                                           HTML("<br><b>Email: </b><a href='mailto:alex.lehmann@cmail.carleton.ca'>alex.lehmann@cmail.carleton.ca</a>")
                                                                         ),
+                                                                        # Contact information
                                                                         HTML("<h3>Source</h3>
                                                                              <a href='https://github.com/Alex-Lehmann/Immunization-Strategy-Simulation'>View the full source code on GitHub.</a>")
                                                                ),
+                                                               
+                                                               # Help tabs
                                                                tabPanel("Help", value="help",
                                                                         tabsetPanel(type="hidden", id='helpTabs',
                                                                                     tabPanelBody(NULL, value="start",
@@ -46,7 +52,7 @@ shinyUI(fluidPage(
                                                                                     tabPanelBody(NULL, value="strategy",
                                                                                                  HTML("<h3>Distribution Strategy</h3>
                                                                                                       <h4>Presets</h4>
-                                                                                                      <p>Users can select pre-built vaccine distribution strategies from this menu. The currently-supported presets are:
+                                                                                                      <p>Select pre-built vaccine distribution strategies from this menu. The currently-supported presets are:
                                                                                                       <ul>
                                                                                                         <li><b>Highest-Risk First:</b> Vaccine distribution will prioritize individuals in age groups with higher COVID-19 mortality rates.</li>
                                                                                                         <li><b>Random:</b> Vaccines are distributed randomly with no priority given to any group.</li>
@@ -57,7 +63,15 @@ shinyUI(fluidPage(
                                                                                                       <h4>Seed Value</h4>
                                                                                                       <p>Users may pass a seed value to the simulation to ensure reproducible results. Pass an empty value to run the simulation without a seed value.
                                                                                                       <h4>Agent Scaling Factor</h4>
-                                                                                                      <p>This parameter allows users to increase the speed of the simulation procedure at the expense of some accuracy. Increase this value to decrease computation time."))
+                                                                                                      <p>This parameter allows users to increase the speed of the simulation procedure at the expense of some accuracy. Increase this value to decrease computation time.")
+                                                                                    ),
+                                                                                    tabPanelBody(NULL, value="metric",
+                                                                                                 HTML("<h3>User-Defined Metric</h3>
+                                                                                                      <h4>Reduce Cases</h4>
+                                                                                                      <p>This parameter determines the amount of weight given to reducing the total number of cases when comparing the currently-selected strategy against no vaccinations. Increasing this value causes the metric to favour a reduction in cases rather than a reduction in deaths.
+                                                                                                      <h4>Reduce Deaths</h4>
+                                                                                                      <p>This parameter determines the amount of weight given to reducing the total number of deaths when comparing the currently-selected strategy against no vaccinations. Increasing this value causes the metric to favour a reduction in deaths rather than a reduction in cases.")
+                                                                                    )
                                                                         )
                                                                )
                                                    )
@@ -73,17 +87,21 @@ shinyUI(fluidPage(
                                                         
                                                         # Summary buttons
                                                         fluidRow(
-                                                          column(width=4, align="center",
+                                                          column(width=3, align="center",
                                                                  actionButton("summaryCases", HTML("<h3><b>Total Cases</h3><h4>-</h4></b>"), width="100%",
                                                                               style="border-radius:6px; background-color:#4CAF50; box-shadow:0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)")
                                                           ),
-                                                          column(width=4, align="center",
+                                                          column(width=3, align="center",
                                                                  actionButton("summaryDeaths", HTML("<h3><b>Total Deaths</h3><h4>-</h4></b>"), width="100%",
                                                                               style="border-radius:6px; background-color:#DC2824; box-shadow:0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)")
                                                           ),
-                                                          column(width=4, align="center",
+                                                          column(width=3, align="center",
                                                                  actionButton("summaryVax", HTML("<h3><b>Total Vaccinated</h3><h4>-</h4></b>"), width="100%",
                                                                               style="border-radius:6px; background-color:#428BCA; box-shadow:0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)")
+                                                          ),
+                                                          column(width=3, align="center",
+                                                                 actionButton("summaryMetric", HTML("<h3><b>User Metric</h3><h4>-</h4></b>"), width="100%",
+                                                                              style="border-radius:6px; box-shadow:0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)")
                                                           )
                                                         ),
                                                         
@@ -131,6 +149,20 @@ shinyUI(fluidPage(
                                                                                           plotlyOutput("summaryNewVaxsTS")
                                                                                    )
                                                                                  )
+                                                                    ),
+                                                                    tabPanelBody(NULL, value="metric",
+                                                                                 titlePanel(HTML("<b>User-Defined Metric Summary</b>")),
+                                                                                 HTML("<br>"),
+                                                                                 fluidRow(
+                                                                                   column(width=6, align="center",
+                                                                                          HTML("<h2>Case Mitigation</h2>"),
+                                                                                          htmlOutput("summaryMetricCases")
+                                                                                   ),
+                                                                                   column(width=6, align="center",
+                                                                                          HTML("<h2>Mortality Mitigation</h2>"),
+                                                                                          htmlOutput("summaryMetricDeaths")
+                                                                                   )
+                                                                                 )
                                                                     )
                                                         )
                                                     ),
@@ -141,11 +173,32 @@ shinyUI(fluidPage(
                                                         
                                                         fluidRow(
                                                             
+                                                            # User-defined metric
+                                                            column(width=3,
+                                                                   fluidRow(
+                                                                      column(width=10,
+                                                                             helpText(HTML("<h4>User-Defined Metric</h4"))
+                                                                      ),
+                                                                      column(width=2, align="right",
+                                                                             actionButton("metricHelpBn", NULL, icon("question"),
+                                                                                          style="border-radius:100%")
+                                                                      )
+                                                                   ),
+                                                                   
+                                                                   # Cases emphasis slider
+                                                                   sliderInput("metricCases", "Reduce Cases", ticks=FALSE, post="%",
+                                                                               min=0, max=100, value=50),
+                                                                   
+                                                                   # Deaths emphasis slider
+                                                                   sliderInput("metricDeaths", "Reduce Deaths", ticks=FALSE, post="%",
+                                                                               min=0, max=100, value=50)
+                                                            ),
+                                                            
                                                             # Vaccine efficacy settings
-                                                            column(width=4,
+                                                            column(width=3,
                                                                    fluidRow(
                                                                        column(width=10,
-                                                                              helpText(HTML("<h4>Provincial Vaccine Availability</h4>")) 
+                                                                              helpText(HTML("<h4>Provincial Vaccine Availability</h4>"))
                                                                        ),
                                                                        column(width=2, align="right",
                                                                               actionButton("vaxHelpBn", NULL, icon("question"),
@@ -159,7 +212,7 @@ shinyUI(fluidPage(
                                                             ),
                                                             
                                                             # Vaccination strategy settings
-                                                            column(width=4,
+                                                            column(width=3,
                                                                    fluidRow(
                                                                      column(width=10, align="left",
                                                                             helpText(HTML("<h4>Distribution Strategy</h4>"))
@@ -177,7 +230,7 @@ shinyUI(fluidPage(
                                                             ),
                                                             
                                                             # Simulation settings
-                                                            column(width=4,
+                                                            column(width=3,
                                                                    fluidRow(
                                                                      column(width=10,
                                                                             helpText(HTML("<h4>Simulation Settings</h4>"))
@@ -190,7 +243,6 @@ shinyUI(fluidPage(
                                                                    
                                                                    numericInput("paramSeed", "Seed Value",
                                                                                 value=NA, min=0, step=1),
-                                                                   setSliderColor("#112446", 1),
                                                                    sliderInput("paramScaling", "Agent Scaling Factor", ticks=FALSE,
                                                                                value=100, min=1, max=200, step=1)
                                                             )

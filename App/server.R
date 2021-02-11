@@ -1,5 +1,9 @@
 library(shiny)
 
+# Base constants
+baseCases = 568919
+baseDeaths = 21368
+
 shinyServer(function(input, output, session){
     
     values = reactiveValues()
@@ -21,7 +25,6 @@ shinyServer(function(input, output, session){
         if (!is.na(input$paramSeed)){ set.seed(input$paramSeed) } else { set.seed(NULL) }
         
         # Simulation initial conditions
-        progress=0
         nIter = 39
         results = tibble(Iteration = 0,
                          `Total Cases` = 0,
@@ -35,11 +38,8 @@ shinyServer(function(input, output, session){
         print("Generating agents")
         agents = sim_make_agents(input$paramStrategy, input$paramScaling)
         
-        progress = 1/5
-        
         # Run simulation
         for (i in 1:nIter){
-            progress = progress + 1/50
             update_modal_progress(value=progress, text=paste0("Simulating iteration ", i," of 40..."))
             
             print(paste0("Starting iteration ", i))
@@ -58,15 +58,23 @@ shinyServer(function(input, output, session){
                    Date = as_date("2021-01-01") + (7 * Iteration))
         values$simResults = results
         
-        # Update summary buttons
         simEnd = slice_tail(results, n=1)
-        simCases = simEnd$`Total Cases`
-        simDeaths = simEnd$`Total Deaths`
-        simVax = simEnd$`Total Vaccinations`
+        values$simCases = simEnd$`Total Cases`
+        values$simDeaths = simEnd$`Total Deaths`
+        values$simVax = simEnd$`Total Vaccinations`
         
-        updateActionButton(session, "summaryCases", label=HTML(paste0("<h3><b>Total Cases</h3><h4>", format(simCases, big.mark=",", scientific=FALSE), "</h4></b>")))
-        updateActionButton(session, "summaryDeaths", label=HTML(paste0("<h3><b>Total Deaths</h3><h4>", format(simDeaths, big.mark=",", scientific=FALSE), "</h4></b>")))
-        updateActionButton(session, "summaryVax", label=HTML(paste0("<h3><b>Total Vaccinated</h3><h4>", format(simVax, big.mark=",", scientific=FALSE), "</h4></b>")))
+        # Compute user-defined metric
+        casesCoef = input$metricCases / 100
+        deathsCoef = input$metricDeaths / 100
+        values$casesReduction = -(values$simCases - baseCases) / baseCases
+        values$deathsReduction = -(values$simDeaths - baseDeaths) / baseDeaths
+        values$userMetric = 100 * (casesCoef*values$casesReduction + deathsCoef*values$deathsReduction)
+        
+        # Update summary buttons
+        updateActionButton(session, "summaryCases", label=HTML(paste0("<h3><b>Total Cases</h3><h4>", format(values$simCases, big.mark=",", scientific=FALSE), "</h4></b>")))
+        updateActionButton(session, "summaryDeaths", label=HTML(paste0("<h3><b>Total Deaths</h3><h4>", format(values$simDeaths, big.mark=",", scientific=FALSE), "</h4></b>")))
+        updateActionButton(session, "summaryVax", label=HTML(paste0("<h3><b>Total Vaccinated</h3><h4>", format(values$simVax, big.mark=",", scientific=FALSE), "</h4></b>")))
+        updateActionButton(session, "summaryMetric", label=HTML(paste0("<h3><b>User Metric</h3><h4>", format(round(values$userMetric, 4), scientific=FALSE), "</h4></b>")))
         updateTabsetPanel(session, "summaryTabs", "cases")
         
         # Close busy dialog
@@ -75,7 +83,7 @@ shinyServer(function(input, output, session){
     })
     
     #######################################################################################
-    # Summary plots #######################################################################
+    # Summary displays ####################################################################
     
     # Cases time series
     output$summaryTotalCasesTS = renderPlotly({
@@ -164,6 +172,49 @@ shinyServer(function(input, output, session){
             config(displayModeBar = FALSE)
     })
     
+    # User-defined metric summary
+    output$summaryMetricCases = renderUI({
+        fluidRow(
+            column(width=6, align="right",
+                   HTML("<h4><b>Expected Without Vaccine:<br>
+                        Simulation Result:<br>
+                        Percent Improvement:</b></h4>")
+            ),
+            column(width=6, align="left",
+                   HTML(paste0("<h4>",
+                               format(baseCases, big.mark=","), "<br>",
+                               format(values$simCases, big.mark=","), "<br>",
+                               format(round(100*values$casesReduction, 2), big.mark=","), "%</h4>"))
+            )
+        )
+    })
+    
+    output$summaryMetricDeaths = renderUI({
+        fluidRow(
+            column(width=6, align="right",
+                   HTML("<h4><b>Expected Without Vaccine:<br>
+                        Simulation Result:<br>
+                        Percent Improvement:</b></h4>")
+            ),
+            column(width=6, align="left",
+                   HTML(paste0("<h4>",
+                               format(baseDeaths, big.mark=","), "<br>",
+                               format(values$simDeaths, big.mark=","), "<br>",
+                               format(round(100*values$deathsReduction, 2), big.mark=","), "%</h4>"))
+            )
+        )
+    })
+    
+    #######################################################################################
+    # User-defined metric linked sliders ##################################################
+    observeEvent(input$metricCases,{
+        updateSliderInput(session, "metricDeaths", value=100-input$metricCases)
+    })
+    
+    observeEvent(input$metricDeaths,{
+        updateSliderInput(session, "metricCases", value=100-input$metricDeaths)
+    })
+    
     #######################################################################################
     # Results summary button variable handlers ############################################
     
@@ -176,9 +227,8 @@ shinyServer(function(input, output, session){
     # Change to vaccinated
     observeEvent(input$summaryVax,{ if (values$hasRun) { updateTabsetPanel(session, "summaryTabs", selected="vax") }})
     
-    #######################################################################################
-    # Clear random seed button ############################################################
-    observeEvent(input$paramSeedBn,{updateNumericInput(session, "paramSeed", value=NA)})
+    # Change to user-defined metric
+    observeEvent(input$summaryMetric,{ if (values$hasRun) { updateTabsetPanel(session, "summaryTabs", selected="metric") }})
     
     #######################################################################################
     # Help buttons ########################################################################
@@ -195,6 +245,10 @@ shinyServer(function(input, output, session){
     observeEvent(input$simHelpBn,{
         updateTabsetPanel(session, "helpTabs", select="sim")
         updateTabsetPanel(session, "infoTabs", select="help") 
+    })
+    observeEvent(input$metricHelpBn,{
+        updateTabsetPanel(session, "helpTabs", select="metric")
+        updateTabsetPanel(session, "infoTabs", select="help")
     })
     
     #######################################################################################
