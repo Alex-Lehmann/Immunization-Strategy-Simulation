@@ -1,0 +1,48 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(knitr)
+```
+
+```{r groups_pop, include=FALSE}
+groups = read_csv("../data/ON_HealthUnit_Census.csv") %>%
+  transmute(`Age_<20` = `Age_0-14` + `Age_15-19`,
+            `Age_20s` = `Age_20-24` + `Age_25-29`,
+            `Age_30s` = `Age_30-34` + `Age_35-39`,
+            `Age_40s` = `Age_40-44` + `Age_45-49`,
+            `Age_50s` = `Age_50-54` + `Age_55-59`,
+            `Age_60s` = `Age_60-64` + `Age_65-69`,
+            `Age_70s` = `Age_70-74` + `Age_75-79`,
+            `Age_80+` = `Age_80-84` + `Age_Over85`) %>%
+  summarize(`<20` = sum(`Age_<20`),
+            `20s` = sum(`Age_20s`),
+            `30s` = sum(`Age_30s`),
+            `40s` = sum(`Age_40s`),
+            `50s` = sum(`Age_50s`),
+            `60s` = sum(`Age_60s`),
+            `70s` = sum(`Age_70s`),
+            `80+` = sum(`Age_80+`)) %>%
+  t()
+
+groups = tibble(`Age Group` = rownames(groups), Population = groups)
+```
+
+Given the available data for age-related mortality, we chose to divide the province's population into ten-year wide age groups. This data was collected in the 2016 Canada Census and retrieved using the CensusMapper API^1^. The populations of each age group can be seen below.  
+
+```{r groups_out, echo=FALSE}
+# Barplot
+ggplot(groups, aes(x=`Age Group`, y=Population)) +
+  geom_bar(stat="identity") +
+  ggtitle("Population of Ontario Age Groups, 2016 Census")
+
+# Table
+kable(groups)
+```
+
+**References:**  
+^1^ "2016 Canada Census.” https://censusmapper.ca. Statistics Canada. Accessed October 10, 2020. https://censusmapper.ca

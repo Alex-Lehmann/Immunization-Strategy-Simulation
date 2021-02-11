@@ -1,0 +1,12 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+There is some evidence^1^ that prior infection with SARS-CoV-2 confers a temporary natural immunity against re-infection. We accounted for this property of the virus in our model by granting agents infected within the previous 26 weeks immunity from further infection. We also removed them from the list of eligible agents to be exposed, as our exposure simulation is based on the effective reproduction rate and thus does not consider immune individuals.
+
+**References:**  
+^1^ Dan, Jennifer M., Jose Mateus, Yu Kato, Kathryn M. Hastie, Esther Dawen Yu, Caterina E. Faliti, Alba Grifoni, et al. “Immunological Memory to SARS-CoV-2 Assessed for up to Eight Months after Infection.” Science 371, no. 6529 (2020). https://doi.org/10.1101/2020.11.15.383323
