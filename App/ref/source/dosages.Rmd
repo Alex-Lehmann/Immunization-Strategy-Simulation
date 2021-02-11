@@ -1,0 +1,14 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Both the Pfizer^1^ and Moderna^2^ vaccines require a second dose for maximum efficacy in preventing COVID-19. For our modeling, we made a simplifying assumption that both confer full benefit after one dose of the vaccine. Users can account for this assumption by considering the vaccine availability parameter to indicate the number of persons receiving a second dose per week, rather than the raw number of doses per week.
+
+**References:**  
+^1^ "Pfizer and BioNTech Conclude Phase 3 Study of COVID-19 Vaccine Candidate, Meeting All Primary Efficacy Endpoints.” https://www.pfizer.com. Pfizer, November 18, 2020. https://www.pfizer.com/news/press-release/press-release-detail/pfizer-and-biontech-conclude-phase-3-study-covid-19-vaccine
+
+^2^ "Moderna Announces Primary Efficacy Analysis in Phase 3 COVE Study for Its COVID-19 Vaccine Candidate and Filing Today with U.S. FDA for Emergency Use Authorization.” https://www.modernatx.com. Moderna, November 30, 2020. https://investors.modernatx.com/news-releases/news-release-details/moderna-announces-primary-efficacy-analysis-phase-3-cove-study

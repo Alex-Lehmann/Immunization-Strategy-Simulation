@@ -1,0 +1,37 @@
+---
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(latex2exp)
+```
+
+```{r Re_load, include=FALSE}
+reEstimates = read_csv("../data/re_estimates_on.csv")
+```
+
+Our model requires an estimate of the infection and spread potential of COVID-19. We chose to use the effective reproduction number $R_e$, which accounts for time-dependent variations in transmissibility^1^. This can include such factors as government intervention measures, social distancing, and others that may provide a more comprehensive picture of virus transmissibility in the provionce.  
+
+The Government of Ontario has, since 16 November 2020, published a daily estimate of the $R_e$ of the COVID-19 virus in Ontario, specifically^2^. This data forms the basis for the transmissibility parameter of the virus in our model. The provincial data begins on `r min(reEstimates$date_start)` and ends on `r max(reEstimates$date_end)`, a range which includes all four seasons and a wide variety of levels of pandemic control measures. We reasoned that on the large scale and long timeline of our simulation, this data could likely be used to obtain a reasonable estimate of $R_e$ going forward.  
+
+We first considered the distribution of estimated values of $R_e$, seen in the histogram below.
+
+```{r Re_hist, echo=FALSE}
+ggplot(reEstimates, aes(x=Re)) +
+  geom_histogram(bins=30) +
+  ggtitle(TeX("Histogram of Estimated $R_e$ in Ontario, 2020-03-13 to 2021-02-02")) +
+  ylab("Number of Estimates")
+```
+```{r Re, include=FALSE}
+Re = summarize(reEstimates, Re = median(Re))
+```
+
+We saw a strong right skew in the $R_e$ estimates, indicating that the mean value `r round(mean(reEstimates$Re), 2)` may not be strongly indicative of the reality. Instead, we assumed that the median value `r median(reEstimates$Re)` was representative of the infectiousness of COVID-19 at large.  
+
+**References:**  
+^1^ Nishiura H., Chowell G. (2009) The Effective Reproduction Number as a Prelude to Statistical Estimation of Time-Dependent Epidemic Trends. In: Chowell G., Hyman J.M., Bettencourt L.M.A., Castillo-Chavez C. (eds) Mathematical and Statistical Estimation Approaches in Epidemiology. Springer, Dordrecht. https://doi.org/10.1007/978-90-481-2313-1_5  
+
+^2^ "Effective Reproduction Number (Re) for COVID-19 in Ontario.” Ontario Data Catalogue. Ontario Treasury Board Secretariat, November 16, 2020. https://data.ontario.ca/en/dataset/effective-reproduction-number-re-for-covid-19-in-ontario

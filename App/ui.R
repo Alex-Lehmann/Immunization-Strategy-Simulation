@@ -1,7 +1,7 @@
 library(shiny)
 
 # Load packages
-packages = c("tidyverse", "lubridate", "shinybusy", "shinyWidgets", "plotly")
+packages = c("tidyverse", "lubridate", "shinybusy", "shinyWidgets", "plotly", "knitr")
 
 source("fn/loadPackages.R")
 loadPackages(packages)
@@ -11,6 +11,7 @@ shinyUI(fluidPage(
     # Global page settings
     chooseSliderSkin("Shiny", "#112446"),
     
+    # Page
     navbarPage("Ontario COVID-19 Immunization Strategy Simulation",
                # Dashboard page
                tabPanel("Dashboard",
@@ -25,7 +26,7 @@ shinyUI(fluidPage(
                                                                # General information
                                                                tabPanel("About", value="about",
                                                                         HTML("<br><p>This app displays the results of different COVID-19 vaccination strategies in Ontario under a variety of simulated conditions. This allows users to quickly and easily review different vaccination strategies under different initial conditions to better inform decision making in the pandemic response.
-                                                                              <p>Click on the help buttons for details about dashboard elements. Detailed and reference information is available on the Data and Assumptions page.
+                                                                              <p>Click on the help buttons for details about dashboard elements. Detailed information regarding data and model assumptions is available on the Reference page.
                                                                               <h3>Contact</h3>"),
                                                                         # LinkedIn badge
                                                                         fluidRow(width=12, align="center",
@@ -254,6 +255,55 @@ shinyUI(fluidPage(
                                                     )
                                                 )
                                       )
+                        )
+               ),
+               
+               tabPanel("Reference",
+                        sidebarLayout(position="right",
+                            
+                            # Information panel
+                            sidebarPanel(width=3, style = "position:fixed; width:inherit;",
+                                         titlePanel("Information"),
+                                         # General information
+                                         tabPanel("About", value="about",
+                                                  HTML("<br><p>This app displays the results of different COVID-19 vaccination strategies in Ontario under a variety of simulated conditions. This allows users to quickly and easily review different vaccination strategies under different initial conditions to better inform decision making in the pandemic response.
+                                                       <p>Click on the help buttons for details about dashboard elements. Detailed and reference information is available on the Data and Assumptions page.
+                                                       <h3>Contact</h3>"),
+                                                  # LinkedIn badge
+                                                  fluidRow(width=12, align="center",
+                                                           HTML("<script type='text/javascript' src='https://platform.linkedin.com/badges/js/profile.js' async defer></script>
+                                                                <div class='LI-profile-badge' data-version='v1' data-size='large' data-locale='en_US' data-type='vertical' data-theme='light' data-vanity='alex-lehmann-ds'><a class='LI-simple-link' href='https://ca.linkedin.com/in/alex-lehmann-ds?trk=profile-badge'>Alex Lehmann</a></div>"),
+                                                           HTML("<br><b>Email: </b><a href='mailto:alex.lehmann@cmail.carleton.ca'>alex.lehmann@cmail.carleton.ca</a>")
+                                                  ),
+                                                  # Contact information
+                                                  HTML("<h3>Source</h3>
+                                                       <a href='https://github.com/Alex-Lehmann/Immunization-Strategy-Simulation'>View the full source code on GitHub.</a>")
+                                         )
+                            ),
+                            
+                            mainPanel(width=9,
+                                      tabsetPanel(type="tabs",
+                                                  tabPanel("COVID-19",
+                                                           tabsetPanel(type="pills",
+                                                                       tabPanel("Reproduction Rate", includeHTML("ref/reproductionRate.html")),
+                                                                       tabPanel("Mortality", includeHTML("ref/mortality.html")),
+                                                                       tabPanel("Post-Infection Immunity", includeHTML("ref/postInfectionImmunity.html"))
+                                                           )
+                                                  ),
+                                                  tabPanel("Vaccines",
+                                                           tabsetPanel(type="pills",
+                                                                       tabPanel("Efficacy", includeHTML("ref/efficacy.html")),
+                                                                       tabPanel("Dosages", includeHTML("ref/dosages.html"))
+                                                           )
+                                                  ),
+                                                  tabPanel("Vaccination Strategies",
+                                                           tabsetPanel(type="pills",
+                                                                       tabPanel("Risk Groups", includeHTML("ref/riskGroups.html")),
+                                                                       tabPanel("Target Metric", includeHTML("ref/targetMetric.html"))
+                                                           )
+                                                  )
+                                      )
+                            )
                         )
                )
     )

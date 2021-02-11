@@ -252,4 +252,8 @@ shinyServer(function(input, output, session){
     })
     
     #######################################################################################
+    
+    output$refReproductionRate = renderUI({
+        HTML(markdown::markdownToHTML(knit("ref/reproductionRate.Rmd", quiet=TRUE)))
+    })
 })
