@@ -67,7 +67,7 @@ shinyUI(fluidPage(
                                                                                                       <p>This parameter allows users to increase the speed of the simulation procedure at the expense of some accuracy. Increase this value to decrease computation time.")
                                                                                     ),
                                                                                     tabPanelBody(NULL, value="metric",
-                                                                                                 HTML("<h3>User-Defined Metric</h3>
+                                                                                                 HTML("<h3>Strategy Effectiveness</h3>
                                                                                                       <h4>Reduce Cases</h4>
                                                                                                       <p>This parameter determines the amount of weight given to reducing the total number of cases when comparing the currently-selected strategy against no vaccinations. Increasing this value causes the metric to favour a reduction in cases rather than a reduction in deaths.
                                                                                                       <h4>Reduce Deaths</h4>
@@ -101,7 +101,7 @@ shinyUI(fluidPage(
                                                                               style="border-radius:6px; background-color:#428BCA; box-shadow:0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)")
                                                           ),
                                                           column(width=3, align="center",
-                                                                 actionButton("summaryMetric", HTML("<h3><b>User Metric</h3><h4>-</h4></b>"), width="100%",
+                                                                 actionButton("summaryMetric", HTML("<h3><b>Strategy Effectiveness</h3><h4>-</h4></b>"), width="100%",
                                                                               style="border-radius:6px; box-shadow:0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)")
                                                           )
                                                         ),
@@ -152,7 +152,7 @@ shinyUI(fluidPage(
                                                                                  )
                                                                     ),
                                                                     tabPanelBody(NULL, value="metric",
-                                                                                 titlePanel(HTML("<b>User-Defined Metric Summary</b>")),
+                                                                                 titlePanel(HTML("<b>Strategy Effectiveness Summary</b>")),
                                                                                  HTML("<br>"),
                                                                                  fluidRow(
                                                                                    column(width=6, align="center",
@@ -178,7 +178,7 @@ shinyUI(fluidPage(
                                                             column(width=3,
                                                                    fluidRow(
                                                                       column(width=10,
-                                                                             helpText(HTML("<h4>User-Defined Metric</h4"))
+                                                                             helpText(HTML("<h4>Strategic Priorities</h4"))
                                                                       ),
                                                                       column(width=2, align="right",
                                                                              actionButton("metricHelpBn", NULL, icon("question"),
@@ -267,7 +267,7 @@ shinyUI(fluidPage(
                                          # General information
                                          tabPanel("About", value="about",
                                                   HTML("<br><p>This app displays the results of different COVID-19 vaccination strategies in Ontario under a variety of simulated conditions. This allows users to quickly and easily review different vaccination strategies under different initial conditions to better inform decision making in the pandemic response.
-                                                       <p>Click on the help buttons for details about dashboard elements. Detailed and reference information is available on the Data and Assumptions page.
+                                                       <p>Click on the help buttons for details about dashboard elements. Detailed information regarding data and model assumptions is available on the Reference page.
                                                        <h3>Contact</h3>"),
                                                   # LinkedIn badge
                                                   fluidRow(width=12, align="center",
@@ -282,28 +282,63 @@ shinyUI(fluidPage(
                             ),
                             
                             mainPanel(width=9,
-                                      tabsetPanel(type="tabs",
-                                                  tabPanel("COVID-19",
-                                                           tabsetPanel(type="pills",
-                                                                       tabPanel("Reproduction Rate", includeHTML("ref/reproductionRate.html")),
-                                                                       tabPanel("Mortality", includeHTML("ref/mortality.html")),
-                                                                       tabPanel("Post-Infection Immunity", includeHTML("ref/postInfectionImmunity.html"))
-                                                           )
-                                                  ),
-                                                  tabPanel("Vaccines",
-                                                           tabsetPanel(type="pills",
-                                                                       tabPanel("Efficacy", includeHTML("ref/efficacy.html")),
-                                                                       tabPanel("Dosages", includeHTML("ref/dosages.html"))
-                                                           )
-                                                  ),
-                                                  tabPanel("Vaccination Strategies",
-                                                           tabsetPanel(type="pills",
-                                                                       tabPanel("Risk Groups", includeHTML("ref/riskGroups.html")),
-                                                                       tabPanel("Target Metric", includeHTML("ref/targetMetric.html"))
-                                                           )
-                                                  )
+                                      wellPanel(
+                                          tabsetPanel(type="tabs",
+                                                      tabPanel("COVID-19",
+                                                               tabsetPanel(type="pills",
+                                                                           tabPanel("Reproduction Rate", includeHTML("ref/reproductionRate.html")),
+                                                                           tabPanel("Mortality", includeHTML("ref/mortality.html")),
+                                                                           tabPanel("Post-Infection Immunity", includeHTML("ref/postInfectionImmunity.html"))
+                                                               )
+                                                      ),
+                                                      tabPanel("Vaccines",
+                                                               tabsetPanel(type="pills",
+                                                                           tabPanel("Efficacy", includeHTML("ref/efficacy.html")),
+                                                                           tabPanel("Dosages", includeHTML("ref/dosages.html"))
+                                                               )
+                                                      ),
+                                                      tabPanel("Vaccination Strategies",
+                                                               tabsetPanel(type="pills",
+                                                                           tabPanel("Risk Groups", includeHTML("ref/riskGroups.html")),
+                                                                           tabPanel("Target Metric", includeHTML("ref/targetMetric.html"))
+                                                               )
+                                                      )
+                                          )
                                       )
                             )
+                        )
+               ),
+               tabPanel("Known Issues",
+                        sidebarLayout(position="right",
+                                      
+                                      # Information panel
+                                      sidebarPanel(width=3, style = "position:fixed; width:inherit;",
+                                                   titlePanel("Information"),
+                                                   # General information
+                                                   tabPanel("About", value="about",
+                                                            HTML("<br><p>This app displays the results of different COVID-19 vaccination strategies in Ontario under a variety of simulated conditions. This allows users to quickly and easily review different vaccination strategies under different initial conditions to better inform decision making in the pandemic response.
+                                                       <p>Click on the help buttons for details about dashboard elements. Detailed information regarding data and model assumptions is available on the Reference page.
+                                                       <h3>Contact</h3>"),
+                                                            # LinkedIn badge
+                                                            fluidRow(width=12, align="center",
+                                                                     HTML("<script type='text/javascript' src='https://platform.linkedin.com/badges/js/profile.js' async defer></script>
+                                                                <div class='LI-profile-badge' data-version='v1' data-size='large' data-locale='en_US' data-type='vertical' data-theme='light' data-vanity='alex-lehmann-ds'><a class='LI-simple-link' href='https://ca.linkedin.com/in/alex-lehmann-ds?trk=profile-badge'>Alex Lehmann</a></div>"),
+                                                                     HTML("<br><b>Email: </b><a href='mailto:alex.lehmann@cmail.carleton.ca'>alex.lehmann@cmail.carleton.ca</a>")
+                                                            ),
+                                                            # Contact information
+                                                            HTML("<h3>Source</h3>
+                                                       <a href='https://github.com/Alex-Lehmann/Immunization-Strategy-Simulation'>View the full source code on GitHub.</a>")
+                                                   )
+                                      ),
+                                      
+                                      mainPanel(width=9,
+                                                wellPanel(
+                                                    HTML("<ul>
+                                                            <li>LinkedIn badge sometimes doesn't appear</li>
+                                                            <li>LaTeX typesetting doesn't always render correctly</li>
+                                                         </ul>")
+                                                )
+                                      )
                         )
                )
     )

@@ -74,7 +74,7 @@ shinyServer(function(input, output, session){
         updateActionButton(session, "summaryCases", label=HTML(paste0("<h3><b>Total Cases</h3><h4>", format(values$simCases, big.mark=",", scientific=FALSE), "</h4></b>")))
         updateActionButton(session, "summaryDeaths", label=HTML(paste0("<h3><b>Total Deaths</h3><h4>", format(values$simDeaths, big.mark=",", scientific=FALSE), "</h4></b>")))
         updateActionButton(session, "summaryVax", label=HTML(paste0("<h3><b>Total Vaccinated</h3><h4>", format(values$simVax, big.mark=",", scientific=FALSE), "</h4></b>")))
-        updateActionButton(session, "summaryMetric", label=HTML(paste0("<h3><b>User Metric</h3><h4>", format(round(values$userMetric, 4), scientific=FALSE), "</h4></b>")))
+        updateActionButton(session, "summaryMetric", label=HTML(paste0("<h3><b>Strategy Effectiveness</h3><h4>", format(round(values$userMetric, 2), scientific=FALSE), "%</h4></b>")))
         updateTabsetPanel(session, "summaryTabs", "cases")
         
         # Close busy dialog
