@@ -1,7 +1,7 @@
 library(shiny)
 
 # Load packages
-packages = c("tidyverse", "shinybusy", "shinyWidgets", "plotly")
+packages = c("tidyverse", "lubridate", "shinybusy", "shinyWidgets", "plotly")
 
 source("fn/loadPackages.R")
 loadPackages(packages)
@@ -22,7 +22,16 @@ shinyUI(fluidPage(
                                                    tabsetPanel(type="tabs", id="infoTabs",
                                                                
                                                                tabPanel("About", value="about",
-                                                                        HTML("<br>This app displays the results of different COVID-19 vaccination strategies in Ontario under a variety of simulated conditions. This allows users to quickly and easily review different vaccination strategies under different initial conditions to better inform decision making in the pandemic response.")
+                                                                        HTML("<br><p>This app displays the results of different COVID-19 vaccination strategies in Ontario under a variety of simulated conditions. This allows users to quickly and easily review different vaccination strategies under different initial conditions to better inform decision making in the pandemic response.
+                                                                              <p>Click on the help buttons for details about dashboard elements. Detailed and reference information is available on the Data and Assumptions page.
+                                                                              <h3>Contact</h3>"),
+                                                                        fluidRow(width=12, align="center",
+                                                                          HTML("<script type='text/javascript' src='https://platform.linkedin.com/badges/js/profile.js' async defer></script>
+                                                                               <div class='LI-profile-badge'  data-version='v1' data-size='large' data-locale='en_US' data-type='vertical' data-theme='light' data-vanity='alex-lehmann-ds'><a class='LI-simple-link' href='https://ca.linkedin.com/in/alex-lehmann-ds?trk=profile-badge'>Alex Lehmann</a></div>"),
+                                                                          HTML("<br><b>Email: </b><a href='mailto:alex.lehmann@cmail.carleton.ca'>alex.lehmann@cmail.carleton.ca</a>")
+                                                                        ),
+                                                                        HTML("<h3>Source</h3>
+                                                                             <a href='https://github.com/Alex-Lehmann/Immunization-Strategy-Simulation'>View the full source code on GitHub.</a>")
                                                                ),
                                                                tabPanel("Help", value="help",
                                                                         tabsetPanel(type="hidden", id='helpTabs',
@@ -40,7 +49,7 @@ shinyUI(fluidPage(
                                                                                                       <p>Users can select pre-built vaccine distribution strategies from this menu. The currently-supported presets are:
                                                                                                       <ul>
                                                                                                         <li><b>Highest-Risk First:</b> Vaccine distribution will prioritize individuals in age groups with higher COVID-19 mortality rates.</li>
-                                                                                                        <li><b>Random:</b> Vaccines are distributed entirely randomly with no priority given to any group.</li>
+                                                                                                        <li><b>Random:</b> Vaccines are distributed randomly with no priority given to any group.</li>
                                                                                                       </ul>")
                                                                                     ),
                                                                                     tabPanelBody(NULL, value="sim",
@@ -48,7 +57,7 @@ shinyUI(fluidPage(
                                                                                                       <h4>Seed Value</h4>
                                                                                                       <p>Users may pass a seed value to the simulation to ensure reproducible results. Pass an empty value to run the simulation without a seed value.
                                                                                                       <h4>Agent Scaling Factor</h4>
-                                                                                                      <p>This parameter allows users to increase the speed of the simulation procedure at the expense of some accuracy. Increase this value to increase computation speed."))
+                                                                                                      <p>This parameter allows users to increase the speed of the simulation procedure at the expense of some accuracy. Increase this value to decrease computation time."))
                                                                         )
                                                                )
                                                    )
@@ -180,7 +189,7 @@ shinyUI(fluidPage(
                                                                    ),
                                                                    
                                                                    numericInput("paramSeed", "Seed Value",
-                                                                                value=7, min=0, step=1),
+                                                                                value=NA, min=0, step=1),
                                                                    setSliderColor("#112446", 1),
                                                                    sliderInput("paramScaling", "Agent Scaling Factor", ticks=FALSE,
                                                                                value=100, min=1, max=200, step=1)

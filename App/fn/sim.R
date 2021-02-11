@@ -4,7 +4,7 @@ reference = tibble(AgeGroup =   c("under20", "20s"  , "30s"  , "40s"  , "50s"  ,
                    Population = c(3028125  , 1772750, 1711035, 1813875, 2053490, 1591725, 926075, 594645),
                    Risk = c(2/34355, 8/54757, 17/41002, 51/37089, 196/38353, 554/24446, 1200/13176, 4454/18227))
 
-confCases = read_csv("refData/conposcovidloc.csv", col_types=cols()) %>%
+confCases = read_csv("ref/data/conposcovidloc.csv", col_types=cols()) %>%
   select(Accurate_Episode_Date, Age_Group, Outcome1) %>%
   mutate(Accurate_Episode_Date = as_date(Accurate_Episode_Date))
 

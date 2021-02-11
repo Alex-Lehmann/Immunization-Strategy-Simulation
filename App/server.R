@@ -22,7 +22,7 @@ shinyServer(function(input, output, session){
         
         # Simulation initial conditions
         progress=0
-        nIter = 40
+        nIter = 39
         results = tibble(Iteration = 0,
                          `Total Cases` = 0,
                          `Total Deaths` = 0,
@@ -54,7 +54,8 @@ shinyServer(function(input, output, session){
         results = results %>%
             mutate(`New Cases` = c(NA, diff(`Total Cases`)),
                    `New Deaths` = c(NA, diff(`Total Deaths`)),
-                   `New Vaccinations` = c(NA, diff(`Total Vaccinations`)))
+                   `New Vaccinations` = c(NA, diff(`Total Vaccinations`)),
+                   Date = as_date("2021-01-01") + (7 * Iteration))
         values$simResults = results
         
         # Update summary buttons
@@ -63,9 +64,9 @@ shinyServer(function(input, output, session){
         simDeaths = simEnd$`Total Deaths`
         simVax = simEnd$`Total Vaccinations`
         
-        updateActionButton(session, "summaryCases", label=HTML(paste0("<h3><b>Total Cases</h3><h4>", format(simCases, big.mark=","), "</h4></b>")))
-        updateActionButton(session, "summaryDeaths", label=HTML(paste0("<h3><b>Total Deaths</h3><h4>", format(simDeaths, big.mark=","), "</h4></b>")))
-        updateActionButton(session, "summaryVax", label=HTML(paste0("<h3><b>Total Vaccinated</h3><h4>", format(simVax, big.mark=","), "</h4></b>")))
+        updateActionButton(session, "summaryCases", label=HTML(paste0("<h3><b>Total Cases</h3><h4>", format(simCases, big.mark=",", scientific=FALSE), "</h4></b>")))
+        updateActionButton(session, "summaryDeaths", label=HTML(paste0("<h3><b>Total Deaths</h3><h4>", format(simDeaths, big.mark=",", scientific=FALSE), "</h4></b>")))
+        updateActionButton(session, "summaryVax", label=HTML(paste0("<h3><b>Total Vaccinated</h3><h4>", format(simVax, big.mark=",", scientific=FALSE), "</h4></b>")))
         updateTabsetPanel(session, "summaryTabs", "cases")
         
         # Close busy dialog
@@ -80,7 +81,7 @@ shinyServer(function(input, output, session){
     output$summaryTotalCasesTS = renderPlotly({
         plot = values$simResults %>%
             filter(!is.na(`Total Cases`)) %>%
-            ggplot( aes(x=Iteration, y=`Total Cases`)) +
+            ggplot( aes(x=Date, y=`Total Cases`)) +
             geom_point(color="#4CAF50") +
             geom_line(color="#4CAF50") +
             ylab("Cumulative COVID-19 Cases")
@@ -94,7 +95,7 @@ shinyServer(function(input, output, session){
     output$summaryNewCasesTS = renderPlotly({
         plot = values$simResults %>%
             filter(!is.na(`New Cases`)) %>%
-            ggplot(aes(x=Iteration, y=`New Cases`)) +
+            ggplot(aes(x=Date, y=`New Cases`)) +
             geom_point(color="#4CAF50") +
             geom_line(color="#4CAF50") +
             ylab("New COVID-19 Cases")
@@ -109,7 +110,7 @@ shinyServer(function(input, output, session){
     output$summaryTotalDeathsTS = renderPlotly({
         plot = values$simResults %>%
             filter(!is.na(`Total Deaths`)) %>%
-            ggplot(aes(x=Iteration, y=`Total Deaths`)) +
+            ggplot(aes(x=Date, y=`Total Deaths`)) +
             geom_point(color="#DC2824") +
             geom_line(color="#DC2824") +
             ylab("Cumulative COVID-19 Deaths")
@@ -123,7 +124,7 @@ shinyServer(function(input, output, session){
     output$summaryNewDeathsTS = renderPlotly({
         plot = values$simResults %>%
             filter(!is.na(`New Deaths`)) %>%
-            ggplot(aes(x=Iteration, y=`New Deaths`)) +
+            ggplot(aes(x=Date, y=`New Deaths`)) +
             geom_point(color="#DC2824") +
             geom_line(color="#DC2824") +
             ylab("New COVID-19 Deaths")
@@ -138,7 +139,7 @@ shinyServer(function(input, output, session){
     output$summaryTotalVaxTS = renderPlotly({
         plot = values$simResults %>%
             filter(!is.na(`Total Vaccinations`)) %>%
-            ggplot(aes(x=Iteration, y=`Total Vaccinations`)) +
+            ggplot(aes(x=Date, y=`Total Vaccinations`)) +
             geom_point(color="#428BCA") +
             geom_line(color="#428BCA") +
             ylab("Cumulative COVID-19 Vaccinations")
@@ -152,7 +153,7 @@ shinyServer(function(input, output, session){
     output$summaryNewVaxsTS = renderPlotly({
         plot = values$simResults %>%
             filter(!is.na(`New Vaccinations`)) %>%
-            ggplot(aes(x=Iteration, y=`New Vaccinations`)) +
+            ggplot(aes(x=Date, y=`New Vaccinations`)) +
             geom_point(color="#428BCA") +
             geom_line(color="#428BCA") +
             ylab("New COVID-19 Vaccinations")
