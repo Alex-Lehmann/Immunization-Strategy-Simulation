@@ -10,7 +10,7 @@ confCases = read_csv("ref/data/conposcovidloc.csv", col_types=cols()) %>%
 
 vaxEff = 0.95
 ###########################################################################################
-###########################################################################################
+# Simulation initialization ###############################################################
 sim_make_agents = function(strategy="random", scaleFactor=1){
   
   # Find individuals with active infections or natural immunity
@@ -60,7 +60,7 @@ sim_make_agents = function(strategy="random", scaleFactor=1){
 }
 
 ###########################################################################################
-###########################################################################################
+# Simulation iterations ###################################################################
 # Agent states:
 #   * 0:  base state
 #   *27: new case
@@ -123,15 +123,62 @@ sim_iter = function(doses=82800, simState, scaleFactor=1){
 }
 
 ###########################################################################################
-###########################################################################################
-sim_results = function(finalState, iter, scaleFactor=1){
-  # Get cumulative statistics from simulation state
-  nCases = sum(finalState$Infections) * scaleFactor
-  nDeaths = sum(finalState$State == -2) * scaleFactor
-  nVax = sum(finalState$State == -1) * scaleFactor
+# Results update ##########################################################################
+sim_results = function(state, results, iter, scaleFactor=1){
   
-  # Output for results
-  results = c(iter, nCases, nDeaths, nVax)
+  # Get current totals per age group from simulation state
+  cases = c(sim_casesByAge(state, "under20"),
+            sim_casesByAge(state, "20s"),
+            sim_casesByAge(state, "30s"),
+            sim_casesByAge(state, "40s"),
+            sim_casesByAge(state, "50s"),
+            sim_casesByAge(state, "60s"),
+            sim_casesByAge(state, "70s"),
+            sim_casesByAge(state, "over80")) * scaleFactor
+  
+  deaths = c(sim_deathsByAge(state, "under20"),
+             sim_deathsByAge(state, "20s"),
+             sim_deathsByAge(state, "30s"),
+             sim_deathsByAge(state, "40s"),
+             sim_deathsByAge(state, "50s"),
+             sim_deathsByAge(state, "60s"),
+             sim_deathsByAge(state, "70s"),
+             sim_deathsByAge(state, "over80")) * scaleFactor
+  
+  vax = c(sim_vaxByAge(state, "under20"),
+          sim_vaxByAge(state, "20s"),
+          sim_vaxByAge(state, "30s"),
+          sim_vaxByAge(state, "40s"),
+          sim_vaxByAge(state, "50s"),
+          sim_vaxByAge(state, "60s"),
+          sim_vaxByAge(state, "70s"),
+          sim_vaxByAge(state, "over80")) * scaleFactor
+  
+  # Update simulation results
+  results = rbind(results, c(iter, cases, deaths, vax))
   
   return(results)
+}
+
+###########################################################################################
+# Results helper functions ################################################################
+sim_casesByAge = function(state, ages){
+  state %>%
+    filter(AgeGroup == ages) %>%
+    summarize(Cases = sum(Infections)) %>%
+    pull(Cases)
+}
+
+sim_deathsByAge = function(state, ages){
+  state %>%
+    filter(AgeGroup == ages) %>%
+    summarize(Deaths = sum(State == -2)) %>%
+    pull(Deaths)
+}
+
+sim_vaxByAge = function(state, ages){
+  state %>%
+    filter(AgeGroup == ages) %>%
+    summarize(Vax = sum(State == -1)) %>%
+    pull(Vax)
 }
