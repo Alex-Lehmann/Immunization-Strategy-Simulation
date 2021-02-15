@@ -86,84 +86,122 @@ shinyUI(fluidPage(
                                                     wellPanel(
                                                         titlePanel("Simulation Results"),
                                                         
-                                                        # Summary buttons
-                                                        fluidRow(
-                                                          column(width=3, align="center",
-                                                                 actionButton("summaryCases", HTML("<h3><b>Total Cases</h3><h4>-</h4></b>"), width="100%",
-                                                                              style="border-radius:6px; background-color:#4CAF50; box-shadow:0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)")
-                                                          ),
-                                                          column(width=3, align="center",
-                                                                 actionButton("summaryDeaths", HTML("<h3><b>Total Deaths</h3><h4>-</h4></b>"), width="100%",
-                                                                              style="border-radius:6px; background-color:#DC2824; box-shadow:0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)")
-                                                          ),
-                                                          column(width=3, align="center",
-                                                                 actionButton("summaryVax", HTML("<h3><b>Total Vaccinated</h3><h4>-</h4></b>"), width="100%",
-                                                                              style="border-radius:6px; background-color:#428BCA; box-shadow:0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)")
-                                                          ),
-                                                          column(width=3, align="center",
-                                                                 actionButton("summaryMetric", HTML("<h3><b>Strategy Effectiveness</h3><h4>-</h4></b>"), width="100%",
-                                                                              style="border-radius:6px; box-shadow:0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)")
-                                                          )
-                                                        ),
-                                                        
-                                                        # Plot and histogram displays
-                                                        tabsetPanel(type="hidden", id="summaryTabs",
-                                                                    tabPanelBody(NULL, value="start"),
-                                                                    tabPanelBody(NULL, value="cases",
-                                                                                 titlePanel(HTML("<b>Case Summary</b>")),
-                                                                                 HTML("<br>"),
-                                                                                 fluidRow(
-                                                                                   column(width=6, align="center",
-                                                                                          HTML("<h2>Cumulative Cases</h2>"),
-                                                                                          plotlyOutput("summaryTotalCasesTS")
-                                                                                   ),
-                                                                                   column(width=6, align="center",
-                                                                                          HTML("<h2>New Cases</h2>"),
-                                                                                          plotlyOutput("summaryNewCasesTS")
-                                                                                   )
+                                                        tabsetPanel(type="tabs", id="resultsTabs",
+                                                                    
+                                                                    # High-level summary
+                                                                    tabPanel("Summary", value="summary",
+                                                                             HTML("<br>"),
+                                                                             # Summary buttons
+                                                                             fluidRow(
+                                                                                 column(width=3, align="center",
+                                                                                        actionButton("summaryCases", HTML("<h3><b>Total Cases</h3><h4>-</h4></b>"), width="100%",
+                                                                                                     style="border-radius:6px; background-color:#4CAF50; box-shadow:0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)")
+                                                                                 ),
+                                                                                 column(width=3, align="center",
+                                                                                        actionButton("summaryDeaths", HTML("<h3><b>Total Deaths</h3><h4>-</h4></b>"), width="100%",
+                                                                                                     style="border-radius:6px; background-color:#DC2824; box-shadow:0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)")
+                                                                                 ),
+                                                                                 column(width=3, align="center",
+                                                                                        actionButton("summaryVax", HTML("<h3><b>Total Vaccinated</h3><h4>-</h4></b>"), width="100%",
+                                                                                                     style="border-radius:6px; background-color:#428BCA; box-shadow:0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)")
+                                                                                 ),
+                                                                                 column(width=3, align="center",
+                                                                                        actionButton("summaryMetric", HTML("<h3><b>Strategy Effectiveness</h3><h4>-</h4></b>"), width="100%",
+                                                                                                     style="border-radius:6px; box-shadow:0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)")
                                                                                  )
+                                                                             ),
+                                                                             
+                                                                             # Plot and histogram displays
+                                                                             tabsetPanel(type="hidden", id="summaryTabs",
+                                                                                         tabPanelBody(NULL, value="start"),
+                                                                                         tabPanelBody(NULL, value="cases",
+                                                                                                      titlePanel(HTML("<b>Case Summary</b>")),
+                                                                                                      HTML("<h2>Active Cases</h2>"),
+                                                                                                      plotlyOutput("summaryActiveCasesTS"),
+                                                                                                      fluidRow(
+                                                                                                          column(width=6, align="center",
+                                                                                                                 HTML("<h2>Cumulative Cases</h2>"),
+                                                                                                                 plotlyOutput("summaryTotalCasesTS")
+                                                                                                          ),
+                                                                                                          column(width=6, align="center",
+                                                                                                                 HTML("<h2>New Cases</h2>"),
+                                                                                                                 plotlyOutput("summaryNewCasesTS")
+                                                                                                          )
+                                                                                                      )
+                                                                                         ),
+                                                                                         tabPanelBody(NULL, value="deaths",
+                                                                                                      titlePanel(HTML("<b>Mortality Summary</b>")),
+                                                                                                      HTML("<br>"),
+                                                                                                      fluidRow(
+                                                                                                          column(width=6, align="center",
+                                                                                                                 HTML("<h2>Cumulative Deaths</h2>"),
+                                                                                                                 plotlyOutput("summaryTotalDeathsTS")
+                                                                                                          ),
+                                                                                                          column(width=6, align="center",
+                                                                                                                 HTML("<h2>New Deaths</h2>"),
+                                                                                                                 plotlyOutput("summaryNewDeathsTS")
+                                                                                                          )
+                                                                                                      )
+                                                                                         ),
+                                                                                         tabPanelBody(NULL, value="vax",
+                                                                                                      titlePanel(HTML("<b>Vaccination Summary</b>")),
+                                                                                                      HTML("<br>"),
+                                                                                                      fluidRow(
+                                                                                                          column(width=6, align="center",
+                                                                                                                 HTML("<h2>Cumulative Vaccinations</h2>"),
+                                                                                                                 plotlyOutput("summaryTotalVaxTS")
+                                                                                                          ),
+                                                                                                          column(width=6, align="center",
+                                                                                                                 HTML("<h2>New Vaccinations</h2>"),
+                                                                                                                 plotlyOutput("summaryNewVaxsTS")
+                                                                                                          )
+                                                                                                      )
+                                                                                         ),
+                                                                                         tabPanelBody(NULL, value="metric",
+                                                                                                      titlePanel(HTML("<b>Strategy Effectiveness Summary</b>")),
+                                                                                                      HTML("<br>"),
+                                                                                                      fluidRow(
+                                                                                                          column(width=6, align="center",
+                                                                                                                 HTML("<h2>Case Mitigation</h2>"),
+                                                                                                                 htmlOutput("summaryMetricCases")
+                                                                                                          ),
+                                                                                                          column(width=6, align="center",
+                                                                                                                 HTML("<h2>Mortality Mitigation</h2>"),
+                                                                                                                 htmlOutput("summaryMetricDeaths")
+                                                                                                          )
+                                                                                                      )
+                                                                                         )
+                                                                             )
                                                                     ),
-                                                                    tabPanelBody(NULL, value="deaths",
-                                                                                 titlePanel(HTML("<b>Mortality Summary</b>")),
-                                                                                 HTML("<br>"),
-                                                                                 fluidRow(
-                                                                                   column(width=6, align="center",
-                                                                                          HTML("<h2>Cumulative Deaths</h2>"),
-                                                                                          plotlyOutput("summaryTotalDeathsTS")
-                                                                                   ),
-                                                                                   column(width=6, align="center",
-                                                                                          HTML("<h2>New Deaths</h2>"),
-                                                                                          plotlyOutput("summaryNewDeathsTS")
-                                                                                   )
-                                                                                 )
-                                                                    ),
-                                                                    tabPanelBody(NULL, value="vax",
-                                                                                 titlePanel(HTML("<b>Vaccination Summary</b>")),
-                                                                                 HTML("<br>"),
-                                                                                 fluidRow(
-                                                                                   column(width=6, align="center",
-                                                                                          HTML("<h2>Cumulative Vaccinations</h2>"),
-                                                                                          plotlyOutput("summaryTotalVaxTS")
-                                                                                   ),
-                                                                                   column(width=6, align="center",
-                                                                                          HTML("<h2>New Vaccinations</h2>"),
-                                                                                          plotlyOutput("summaryNewVaxsTS")
-                                                                                   )
-                                                                                 )
-                                                                    ),
-                                                                    tabPanelBody(NULL, value="metric",
-                                                                                 titlePanel(HTML("<b>Strategy Effectiveness Summary</b>")),
-                                                                                 HTML("<br>"),
-                                                                                 fluidRow(
-                                                                                   column(width=6, align="center",
-                                                                                          HTML("<h2>Case Mitigation</h2>"),
-                                                                                          htmlOutput("summaryMetricCases")
-                                                                                   ),
-                                                                                   column(width=6, align="center",
-                                                                                          HTML("<h2>Mortality Mitigation</h2>"),
-                                                                                          htmlOutput("summaryMetricDeaths")
-                                                                                   )
-                                                                                 )
+                                                                    
+                                                                    # Detailed epidemiological results
+                                                                    tabPanel("Epidemiological Detail", value="epiDetail",
+                                                                             tabsetPanel(type="pills", id="epiDetailTabs",
+                                                                                         tabPanel("Case Spread",
+                                                                                                  
+                                                                                                  # Time series by age group
+                                                                                                  titlePanel(HTML("<h2>Time Series of Cases, By Age Group</h2>")),
+                                                                                                  fluidRow(
+                                                                                                      column(width=6, align="center",
+                                                                                                             titlePanel(HTML("<h3>Cumulative Cases</h3>")),
+                                                                                                             plotlyOutput("totalCasesTSbyAge")
+                                                                                                      ),
+                                                                                                      column(width=6, align="center",
+                                                                                                             titlePanel(HTML("<h3>New Cases</h3>")),
+                                                                                                             plotlyOutput("newCasesTSbyAge")
+                                                                                                      )
+                                                                                                  ),
+                                                                                                  # Age group comparison
+                                                                                                  titlePanel(HTML("<h2>Cumulative Cases Per Age Group, With Outcomes</h2>")),
+                                                                                                  plotlyOutput("caseOutcomePlot"),
+                                                                                                  HTML("<br>"),
+                                                                                                  sliderInput("caseOutcomePlotTime", "Show data for week of:",
+                                                                                                              min=as_date("2021-01-08"), max=as_date("2021-10-01"), step=7, value=as_date("2021-10-01")),
+                                                                                                  # Reproduction rate
+                                                                                                  titlePanel(HTML("<h2>Reproduction Rate</h3>")),
+                                                                                                  plotlyOutput("reproductionPlot")
+                                                                                         )
+                                                                             )
                                                                     )
                                                         )
                                                     ),
@@ -245,7 +283,7 @@ shinyUI(fluidPage(
                                                                    numericInput("paramSeed", "Seed Value",
                                                                                 value=NA, min=0, step=1),
                                                                    sliderInput("paramScaling", "Agent Scaling Factor", ticks=FALSE,
-                                                                               value=100, min=1, max=200, step=1)
+                                                                               value=50, min=1, max=100, step=1)
                                                             )
                                                         ),
                                                         

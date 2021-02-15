@@ -105,9 +105,6 @@ sim_iter = function(doses=82800, simState, scaleFactor=1){
   simState = mutate(simState, State = ifelse(UID %in% toExpose & (State == 0 | (State == -1 & rbinom(1, 1, vaxEff) == 0)), 27, State)) # Update agents
   simState = mutate(simState, Infections = ifelse(State == 27, Infections + 1, Infections))
   
-  # Progress cases
-  simState = mutate(simState, State = ifelse(State > 0, State - 1, State))
-  
   # Vaccinate uninfected agents
   if (doses != 0){
     toVax = simState %>% # Grab highest-priority uninfected persons
@@ -118,6 +115,9 @@ sim_iter = function(doses=82800, simState, scaleFactor=1){
     
     simState = mutate(simState, State = ifelse(UID %in% toVax, -1, State)) # Update agents
   }
+  
+  # Progress cases
+  simState = mutate(simState, State = ifelse(State > 0, State - 1, State))
   
   return(simState)
 }
@@ -154,8 +154,17 @@ sim_results = function(state, results, iter, scaleFactor=1){
           sim_vaxByAge(state, "70s"),
           sim_vaxByAge(state, "over80")) * scaleFactor
   
+  active = c(sim_activeByAge(state, "under20"),
+             sim_activeByAge(state, "20s"),
+             sim_activeByAge(state, "30s"),
+             sim_activeByAge(state, "40s"),
+             sim_activeByAge(state, "50s"),
+             sim_activeByAge(state, "60s"),
+             sim_activeByAge(state, "70s"),
+             sim_activeByAge(state, "over80")) * scaleFactor
+  
   # Update simulation results
-  results = rbind(results, c(iter, cases, deaths, vax))
+  results = rbind(results, c(iter, cases, deaths, vax, active))
   
   return(results)
 }
@@ -181,4 +190,11 @@ sim_vaxByAge = function(state, ages){
     filter(AgeGroup == ages) %>%
     summarize(Vax = sum(State == -1)) %>%
     pull(Vax)
+}
+
+sim_activeByAge = function(state, ages){
+  state %>%
+    filter(AgeGroup == ages) %>%
+    summarize(Active = sum(State %in% c(26, 25))) %>%
+    pull(Active)
 }

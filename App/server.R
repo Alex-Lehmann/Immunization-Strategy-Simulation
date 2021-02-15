@@ -52,14 +52,32 @@ shinyServer(function(input, output, session){
                          Vax_50s = 0,
                          Vax_60s = 0,
                          Vax_70s = 0,
-                         Vax_Over80 = 0)
+                         Vax_Over80 = 0,
+                         
+                         Active_Under20 = 0,
+                         Active_20s = 0,
+                         Active_30s = 0,
+                         Active_40s = 0,
+                         Active_50s = 0,
+                         Active_60s = 0,
+                         Active_70s = 0,
+                         Active_Over80 = 0)
         
         # Display busy dialog
         show_modal_spinner(spin="swapping-squares", color="#112446", text="Simulating...")
         
-        # Generate agents
+        # Generate agents and record active cases
         print("Generating agents")
         agents = sim_make_agents(input$paramStrategy, input$paramScaling)
+        results = mutate(results,
+                         Active_Under20 = sim_activeByAge(agents, "under20")*input$paramScaling,
+                         Active_20s = sim_activeByAge(agents, "20s")*input$paramScaling,
+                         Active_30s = sim_activeByAge(agents, "30s")*input$paramScaling,
+                         Active_40s = sim_activeByAge(agents, "40s")*input$paramScaling,
+                         Active_50s = sim_activeByAge(agents, "50s")*input$paramScaling,
+                         Active_60s = sim_activeByAge(agents, "60s")*input$paramScaling,
+                         Active_70s = sim_activeByAge(agents, "70s")*input$paramScaling,
+                         Active_Over80 = sim_activeByAge(agents, "over80")*input$paramScaling)
         
         # Run simulation
         for (i in 1:nIter){
@@ -111,6 +129,11 @@ shinyServer(function(input, output, session){
         updateActionButton(session, "summaryVax", label=HTML(paste0("<h3><b>Total Vaccinated</h3><h4>", format(values$simVax, big.mark=",", scientific=FALSE), "</h4></b>")))
         updateActionButton(session, "summaryMetric", label=HTML(paste0("<h3><b>Strategy Effectiveness</h3><h4>", format(round(values$userMetric, 2), scientific=FALSE), "%</h4></b>")))
         updateTabsetPanel(session, "summaryTabs", "cases")
+        updateTabsetPanel(session, "resultsTabs", "summary")
+        
+        # Reset epidemiological summary inputs
+        updateSliderInput(session, "caseDistributionPlotTime", value=as_date("2021-10-01"))
+        updateSelectInput(session, "ageGroupSummarySelect", selected="Under20")
         
         # Close busy dialog
         remove_modal_spinner()
@@ -121,13 +144,27 @@ shinyServer(function(input, output, session){
     # Summary displays ####################################################################
     
     # Cases time series
+    output$summaryActiveCasesTS = renderPlotly({
+        plot = values$results %>%
+            transmute(Date = Date,
+                      `Active Cases` = Active_Under20 + Active_20s + Active_30s + Active_40s + Active_50s + Active_60s + Active_70s + Active_Over80) %>%
+            ggplot(aes(x=Date, y=`Active Cases`)) +
+            geom_point(color="#4CAF50") +
+            geom_line(color="#4CAF50")
+        ggplotly(plot) %>%
+            layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
+                   xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
+    })
+    
     output$summaryTotalCasesTS = renderPlotly({
         plot = values$overallCases %>%
             filter(!is.na(`Total Cases`)) %>%
-            ggplot( aes(x=Date, y=`Total Cases`)) +
+            ggplot(aes(x=Date, y=`Total Cases`)) +
             geom_point(color="#4CAF50") +
             geom_line(color="#4CAF50") +
-            ylab("Cumulative COVID-19 Cases")
+            ylab("Cumulative Cases")
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
                    xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
@@ -141,7 +178,7 @@ shinyServer(function(input, output, session){
             ggplot(aes(x=Date, y=`New Cases`)) +
             geom_point(color="#4CAF50") +
             geom_line(color="#4CAF50") +
-            ylab("New COVID-19 Cases")
+            ylab("New Cases")
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
                    xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
@@ -156,7 +193,7 @@ shinyServer(function(input, output, session){
             ggplot(aes(x=Date, y=`Total Deaths`)) +
             geom_point(color="#DC2824") +
             geom_line(color="#DC2824") +
-            ylab("Cumulative COVID-19 Deaths")
+            ylab("Cumulative Deaths")
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
                    xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
@@ -170,7 +207,7 @@ shinyServer(function(input, output, session){
             ggplot(aes(x=Date, y=`New Deaths`)) +
             geom_point(color="#DC2824") +
             geom_line(color="#DC2824") +
-            ylab("New COVID-19 Deaths")
+            ylab("New Deaths")
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
                    xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
@@ -185,7 +222,7 @@ shinyServer(function(input, output, session){
             ggplot(aes(x=Date, y=`Total Vaccinations`)) +
             geom_point(color="#428BCA") +
             geom_line(color="#428BCA") +
-            ylab("Cumulative COVID-19 Vaccinations")
+            ylab("Cumulative Vaccinations")
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
                    xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
@@ -199,7 +236,7 @@ shinyServer(function(input, output, session){
             ggplot(aes(x=Date, y=`New Vaccinations`)) +
             geom_point(color="#428BCA") +
             geom_line(color="#428BCA") +
-            ylab("New COVID-19 Vaccinations")
+            ylab("New Vaccinations")
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
                    xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
@@ -238,6 +275,100 @@ shinyServer(function(input, output, session){
                                format(round(100*values$deathsReduction, 2), big.mark=","), "%</h4>"))
             )
         )
+    })
+    
+    #######################################################################################
+    # Epidemiological detail plots ########################################################
+    output$totalCasesTSbyAge = renderPlotly({
+        plot = values$results %>%
+            select(Date, Cases_Under20, Cases_20s, Cases_30s, Cases_40s, Cases_50s, Cases_60s, Cases_70s, Cases_Over80) %>%
+            rename(`Under 20` = Cases_Under20, `20s` = Cases_20s, `30s` = Cases_30s, `40s` = Cases_40s, `50s` = Cases_50s, `60s` = Cases_60s, `70s` = Cases_70s, `Over 80` = Cases_Over80) %>%
+            pivot_longer(!Date, names_to="AgeGroup", values_to="Total Cases") %>%
+            mutate(`Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) %>% # For legend order
+            ggplot(aes(x=Date, y=`Total Cases`, color=`Age Group`)) +
+            geom_line() +
+            ylab("Cumulative Cases")
+        
+        ggplotly(plot) %>%
+            layout(legend=list(orientation="h", y=1.2),
+                   xaxis=list(fixedrange=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
+    })
+    
+    output$newCasesTSbyAge = renderPlotly({
+        plot = values$results %>%
+            select(Date, Cases_Under20, Cases_20s, Cases_30s, Cases_40s, Cases_50s, Cases_60s, Cases_70s, Cases_Over80) %>%
+            mutate_at(vars(-Date), function(x){c(NA, diff(x))}) %>%
+            rename(`Under 20` = Cases_Under20, `20s` = Cases_20s, `30s` = Cases_30s, `40s` = Cases_40s, `50s` = Cases_50s, `60s` = Cases_60s, `70s` = Cases_70s, `Over 80` = Cases_Over80) %>%
+            pivot_longer(!Date, names_to="AgeGroup", values_to="New Cases") %>%
+            mutate(`Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) %>% # For legend order
+            ggplot(aes(x=Date, y=`New Cases`, color=`Age Group`)) +
+            geom_line() +
+            ylab("New Cases")
+        
+        ggplotly(plot) %>%
+            layout(legend=list(orientation="h", y=1.2),
+                   xaxis=list(fixedrange=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
+    })
+    
+    output$caseOutcomePlot = renderPlotly({
+        
+        # Get data for user-selected week
+        selectedWeek = values$results %>%
+            filter(Date == input$caseOutcomePlotTime)
+        
+        # Get resolved cases for each age group
+        resolvedUnder20 = selectedWeek$Cases_Under20 - selectedWeek$Deaths_Under20
+        resolved20s = selectedWeek$Cases_20s - selectedWeek$Deaths_20s
+        resolved30s = selectedWeek$Cases_30s - selectedWeek$Deaths_30s
+        resolved40s = selectedWeek$Cases_40s - selectedWeek$Deaths_40s
+        resolved50s = selectedWeek$Cases_50s - selectedWeek$Deaths_50s
+        resolved60s = selectedWeek$Cases_60s - selectedWeek$Deaths_60s
+        resolved70s = selectedWeek$Cases_70s - selectedWeek$Deaths_70s
+        resolvedOver80 = selectedWeek$Cases_Over80 - selectedWeek$Deaths_Over80
+        
+        # Create tibble and plot
+        plot = tibble(AgeGroup = rep(c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"), each=2),
+                      Outcome = rep(c("Recovered", "Fatal"), 8),
+                      Cases = c(resolvedUnder20, selectedWeek$Deaths_Under20,
+                                resolved20s, selectedWeek$Deaths_20s,
+                                resolved30s, selectedWeek$Deaths_30s,
+                                resolved40s, selectedWeek$Deaths_40s,
+                                resolved50s, selectedWeek$Deaths_50s,
+                                resolved60s, selectedWeek$Deaths_60s,
+                                resolved70s, selectedWeek$Deaths_70s,
+                                resolvedOver80, selectedWeek$Deaths_Over80)) %>%
+            mutate(`Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) %>% # For x-axis sorting
+            ggplot(aes(x=`Age Group`, y=Cases, fill=Outcome)) +
+            geom_bar(stat="identity", position="stack") +
+            ylab("Cumulative Count") +
+            scale_fill_manual(values=c("#DC2824", "#4CAF50")) +
+            theme(legend.position="none")
+        
+        ggplotly(plot) %>%
+            config(displayModeBar = FALSE)
+    })
+    
+    output$reproductionPlot = renderPlotly({
+        plot = values$results %>%
+            mutate(Cases = Cases_Under20 + Cases_20s + Cases_30s + Cases_40s + Cases_50s + Cases_60s + Cases_70s + Cases_Over80,
+                   Cases = c(NA, diff(Cases)),
+                   Active = Active_Under20 + Active_20s + Active_30s + Active_40s + Active_50s + Active_60s + Active_70s + Active_Over80) %>%
+            filter(Iteration > 0) %>%
+            transmute(Date = Date, `Reproduction Rate` = round(2*Cases / Active, 2)) %>% # Times 2 because of contagious period
+            ggplot(aes(x=Date, y=`Reproduction Rate`)) +
+            geom_point(color="orange") +
+            geom_line(color="orange") +
+            geom_hline(aes(yintercept=1))
+
+        ggplotly(plot) %>%
+            layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
+                   xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
     })
     
     #######################################################################################
@@ -287,8 +418,4 @@ shinyServer(function(input, output, session){
     })
     
     #######################################################################################
-    
-    output$refReproductionRate = renderUI({
-        HTML(markdown::markdownToHTML(knit("ref/reproductionRate.Rmd", quiet=TRUE)))
-    })
 })
