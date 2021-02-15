@@ -27,9 +27,32 @@ shinyServer(function(input, output, session){
         # Simulation initial conditions
         nIter = 39
         results = tibble(Iteration = 0,
-                         `Total Cases` = 0,
-                         `Total Deaths` = 0,
-                         `Total Vaccinations` = 0)
+                         Cases_Under20 = 0,
+                         Cases_20s = 0,
+                         Cases_30s = 0,
+                         Cases_40s = 0,
+                         Cases_50s = 0,
+                         Cases_60s = 0,
+                         Cases_70s = 0,
+                         Cases_Over80 = 0,
+                         
+                         Deaths_Under20 = 0,
+                         Deaths_20s = 0,
+                         Deaths_30s = 0,
+                         Deaths_40s = 0,
+                         Deaths_50s = 0,
+                         Deaths_60s = 0,
+                         Deaths_70s = 0,
+                         Deaths_Over80 = 0,
+                         
+                         Vax_Under20 = 0,
+                         Vax_20s = 0,
+                         Vax_30s = 0,
+                         Vax_40s = 0,
+                         Vax_50s = 0,
+                         Vax_60s = 0,
+                         Vax_70s = 0,
+                         Vax_Over80 = 0)
         
         # Display busy dialog
         show_modal_spinner(spin="swapping-squares", color="#112446", text="Simulating...")
@@ -40,28 +63,40 @@ shinyServer(function(input, output, session){
         
         # Run simulation
         for (i in 1:nIter){
-            update_modal_progress(value=progress, text=paste0("Simulating iteration ", i," of 40..."))
+            update_modal_progress(value=progress, text=paste0("Simulating iteration ", i," of " ,nIter, "..."))
             
             print(paste0("Starting iteration ", i))
             agents = sim_iter(paramVax, agents, input$paramScaling)
             
-            results = rbind(results, sim_results(agents, i, input$paramScaling))
+            results = sim_results(agents, results, i, input$paramScaling)
             print(paste0("Iteration ", i, " complete"))
         }
         print("Simulation complete")
+        values$results = mutate(results, Date = as_date("2021-01-01") + (7*Iteration))
         
         # Process summary results
-        results = results %>%
-            mutate(`New Cases` = c(NA, diff(`Total Cases`)),
-                   `New Deaths` = c(NA, diff(`Total Deaths`)),
-                   `New Vaccinations` = c(NA, diff(`Total Vaccinations`)),
-                   Date = as_date("2021-01-01") + (7 * Iteration))
-        values$simResults = results
+        values$overallCases = values$results %>%
+            mutate(`Total Cases` = Cases_Under20 + Cases_20s + Cases_30s + Cases_40s + Cases_50s + Cases_60s + Cases_70s + Cases_Over80,
+                   `New Cases` = c(NA, diff(`Total Cases`))) %>%
+            select(Iteration, Date, `Total Cases`, `New Cases`)
+        values$overallDeaths = values$results %>%
+            mutate(`Total Deaths` = Deaths_Under20 + Deaths_20s + Deaths_30s + Deaths_40s + Deaths_50s + Deaths_60s + Deaths_70s + Deaths_Over80,
+                   `New Deaths` = c(NA, diff(`Total Deaths`))) %>%
+            select(Iteration, Date, `Total Deaths`, `New Deaths`)
+        values$overallVax = values$results %>%
+            mutate(`Total Vaccinations` = Vax_Under20 + Vax_20s + Vax_30s + Vax_40s + Vax_50s + Vax_60s + Vax_70s + Vax_Over80,
+                   `New Vaccinations` = c(NA, diff(`Total Vaccinations`))) %>%
+            select(Iteration, Date, `Total Vaccinations`, `New Vaccinations`)
         
-        simEnd = slice_tail(results, n=1)
-        values$simCases = simEnd$`Total Cases`
-        values$simDeaths = simEnd$`Total Deaths`
-        values$simVax = simEnd$`Total Vaccinations`
+        values$simCases = values$overallCases %>%
+            slice_tail(n=1) %>%
+            pull(`Total Cases`)
+        values$simDeaths = values$overallDeaths %>%
+            slice_tail(n=1) %>%
+            pull(`Total Deaths`)
+        values$simVax = values$overallVax %>%
+            slice_tail(n=1) %>%
+            pull(`Total Vaccinations`)
         
         # Compute user-defined metric
         casesCoef = input$metricCases / 100
@@ -87,7 +122,7 @@ shinyServer(function(input, output, session){
     
     # Cases time series
     output$summaryTotalCasesTS = renderPlotly({
-        plot = values$simResults %>%
+        plot = values$overallCases %>%
             filter(!is.na(`Total Cases`)) %>%
             ggplot( aes(x=Date, y=`Total Cases`)) +
             geom_point(color="#4CAF50") +
@@ -101,7 +136,7 @@ shinyServer(function(input, output, session){
     })
     
     output$summaryNewCasesTS = renderPlotly({
-        plot = values$simResults %>%
+        plot = values$overallCases %>%
             filter(!is.na(`New Cases`)) %>%
             ggplot(aes(x=Date, y=`New Cases`)) +
             geom_point(color="#4CAF50") +
@@ -116,7 +151,7 @@ shinyServer(function(input, output, session){
     
     # Deaths time series
     output$summaryTotalDeathsTS = renderPlotly({
-        plot = values$simResults %>%
+        plot = values$overallDeaths %>%
             filter(!is.na(`Total Deaths`)) %>%
             ggplot(aes(x=Date, y=`Total Deaths`)) +
             geom_point(color="#DC2824") +
@@ -130,7 +165,7 @@ shinyServer(function(input, output, session){
     })
     
     output$summaryNewDeathsTS = renderPlotly({
-        plot = values$simResults %>%
+        plot = values$overallDeaths %>%
             filter(!is.na(`New Deaths`)) %>%
             ggplot(aes(x=Date, y=`New Deaths`)) +
             geom_point(color="#DC2824") +
@@ -145,7 +180,7 @@ shinyServer(function(input, output, session){
     
     # Vaccinations time series
     output$summaryTotalVaxTS = renderPlotly({
-        plot = values$simResults %>%
+        plot = values$overallVax %>%
             filter(!is.na(`Total Vaccinations`)) %>%
             ggplot(aes(x=Date, y=`Total Vaccinations`)) +
             geom_point(color="#428BCA") +
@@ -159,7 +194,7 @@ shinyServer(function(input, output, session){
     })
     
     output$summaryNewVaxsTS = renderPlotly({
-        plot = values$simResults %>%
+        plot = values$overallVax %>%
             filter(!is.na(`New Vaccinations`)) %>%
             ggplot(aes(x=Date, y=`New Vaccinations`)) +
             geom_point(color="#428BCA") +
