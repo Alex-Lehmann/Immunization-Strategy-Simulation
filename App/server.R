@@ -354,6 +354,89 @@ shinyServer(function(input, output, session){
         toTable
     }, options=list(pageLength=8, bFilter=FALSE), filter="none")
     
+    output$reproductionPlot = renderPlotly({
+        plot = values$results %>%
+            mutate(Cases = Cases_Under20 + Cases_20s + Cases_30s + Cases_40s + Cases_50s + Cases_60s + Cases_70s + Cases_Over80,
+                   Cases = c(NA, diff(Cases)),
+                   Deaths = Deaths_Under20 + Deaths_20s + Deaths_30s + Deaths_40s + Deaths_50s + Deaths_60s + Deaths_70s + Deaths_Over80,
+                   Deaths = c(NA, diff(Deaths)),
+                   Active = Active_Under20 + Active_20s + Active_30s + Active_40s + Active_50s + Active_60s + Active_70s + Active_Over80) %>%
+            transmute(Date = Date,
+                      `Reproduction Rate` = round(2*Cases / (lag(Active) - Deaths), 2)) %>%
+            ggplot(aes(x=Date, y=`Reproduction Rate`)) +
+            geom_point(color="#4CAF50") +
+            geom_line(color="#4CAF50") +
+            geom_hline(aes(yintercept=1), alpha=0.5)
+        
+        ggplotly(plot) %>%
+            layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
+                   xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
+    })
+    
+    #######################################################################################
+    # Case Severity #######################################################################
+    
+    output$totalDeathsTSbyAge = renderPlotly({
+        plot = values$results %>%
+            select(Date, starts_with("Deaths")) %>%
+            pivot_longer(!Date, names_to="AgeGroup", values_to="Total Deaths") %>%
+            mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
+                   AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
+                   `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) %>% # For legend order
+            ggplot(aes(x=Date, y=`Total Deaths`, color=`Age Group`)) +
+            geom_line() +
+            ylab("Cumulative Deaths")
+        
+        ggplotly(plot) %>%
+            layout(legend=list(orientation="h", y=1.2),
+                   xaxis=list(fixedrange=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
+    })
+    
+    output$newDeathsTSbyAge = renderPlotly({
+        plot = values$results %>%
+            select(Date, starts_with("Deaths")) %>%
+            mutate(across(starts_with("Deaths"), function(x){ c(NA, diff(x)) })) %>%
+            pivot_longer(!Date, names_to="AgeGroup", values_to="New Cases") %>%
+            mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
+                   AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
+                   `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) %>% # For legend order
+            ggplot(aes(x=Date, y=`New Cases`, color=`Age Group`)) +
+            geom_line() +
+            ylab("New Deaths")
+        
+        ggplotly(plot) %>%
+            layout(legend=list(orientation="h", y=1.2),
+                   xaxis=list(fixedrange=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
+    })
+    
+    output$deathsTable = renderDataTable({
+        
+        toTable = NULL
+        if (input$deathsTableSelect == "New Deaths"){ # Difference deaths columns if new deaths data is requested
+            toTable = values$results %>%
+                mutate(across(starts_with("Deaths"), function(x){ c(NA, diff(x)) })) %>%
+                filter(Iteration > 0) %>%
+                select(Date, starts_with("Deaths"))
+        } else {
+            toTable = values$results %>%
+                select(Date, starts_with("Deaths"))
+        }
+        toTable = toTable %>%
+            mutate(Total = rowSums(across(!matches("Date")))) %>%
+            relocate(Total, .after=Date)
+        colnames(toTable) = colnames(toTable) %>%
+            str_extract("(?<=_).*|Date|Total") %>%
+            str_replace_all(pattern="r", replacement="r ")
+        
+        toTable
+    }, options=list(pageLength=8, bFilter=FALSE), filter="none")
+    
     output$caseOutcomePlot = renderPlotly({
         
         # Get data for user-selected week
@@ -392,20 +475,17 @@ shinyServer(function(input, output, session){
             config(displayModeBar = FALSE)
     })
     
-    output$reproductionPlot = renderPlotly({
-        plot = values$results %>%
-            mutate(Cases = Cases_Under20 + Cases_20s + Cases_30s + Cases_40s + Cases_50s + Cases_60s + Cases_70s + Cases_Over80,
-                   Cases = c(NA, diff(Cases)),
-                   Deaths = Deaths_Under20 + Deaths_20s + Deaths_30s + Deaths_40s + Deaths_50s + Deaths_60s + Deaths_70s + Deaths_Over80,
-                   Deaths = c(NA, diff(Deaths)),
-                   Active = Active_Under20 + Active_20s + Active_30s + Active_40s + Active_50s + Active_60s + Active_70s + Active_Over80) %>%
-            transmute(Date = Date,
-                      `Reproduction Rate` = round(2*Cases / (lag(Active) - Deaths), 2)) %>%
-            ggplot(aes(x=Date, y=`Reproduction Rate`)) +
-            geom_point(color="orange") +
-            geom_line(color="orange") +
-            geom_hline(aes(yintercept=1), alpha=0.5)
+    output$mortalityPlot = renderPlotly({
         
+        plot = values$results %>%
+            mutate(Active = rowSums(across(starts_with("Active"))),
+                   Deaths = c(NA, diff(rowSums(across(starts_with("Deaths"))))),
+                   `Mortality Rate` = round(Deaths / Active, 4)) %>%
+            filter(Iteration > 0) %>%
+            ggplot(aes(x=Date, y=`Mortality Rate`)) +
+            geom_point(color="#DC2824") +
+            geom_line(color="#DC2824")
+            
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
                    xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),

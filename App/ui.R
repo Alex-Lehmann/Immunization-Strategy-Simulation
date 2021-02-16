@@ -191,6 +191,7 @@ shinyUI(fluidPage(
                                                                                         plotlyOutput("newCasesTSbyAge")
                                                                                  )
                                                                              ),
+                                                                             # Time series tables
                                                                              HTML("<br>"),
                                                                              selectInput("caseTableSelect", "View detailed data for:", width="30%",
                                                                                          list("Active Cases" = "Active_",
@@ -198,15 +199,41 @@ shinyUI(fluidPage(
                                                                                               "New Cases" = "New")),
                                                                              dataTableOutput("casesTable"),
                                                                              
+                                                                             
+                                                                             # Reproduction rate
+                                                                             titlePanel(HTML("<br><h2>Reproduction Rate</h3>")),
+                                                                             plotlyOutput("reproductionPlot")
+                                                                    ),
+                                                                    tabPanel("Illness Severity", value="severity",
+                                                                             
+                                                                             # Time series by age group
+                                                                             titlePanel(HTML("<h2>Time Series of Deaths, By Age Group</h2>")),
+                                                                             fluidRow(
+                                                                                 column(width=6, align="center",
+                                                                                        titlePanel(HTML("<h3>Cumulative Deaths</h3>")),
+                                                                                        plotlyOutput("totalDeathsTSbyAge")
+                                                                                 ),
+                                                                                 column(width=6, align="center",
+                                                                                        titlePanel(HTML("<h3>New Deaths</h3>")),
+                                                                                        plotlyOutput("newDeathsTSbyAge")
+                                                                                 )
+                                                                             ),
+                                                                             # Time series tables
+                                                                             HTML("<br>"),
+                                                                             selectInput("deathsTableSelect", "View detailed data for:", width="30%",
+                                                                                         c("Cumulative Deaths", "New Deaths")),
+                                                                             dataTableOutput("deathsTable"),
+                                                                             
                                                                              # Age group comparison
-                                                                             titlePanel(HTML("<br><h2>Cumulative Cases Per Age Group, With Outcomes</h2>")),
+                                                                             titlePanel(HTML("<br><h2>Cumulative Outcomes Per Age Group</h2>")),
                                                                              plotlyOutput("caseOutcomePlot"),
                                                                              HTML("<br>"),
                                                                              sliderInput("caseOutcomePlotTime", "Show data through:",
                                                                                          min=as_date("2021-01-08"), max=as_date("2021-10-01"), step=7, value=as_date("2021-10-01")),
-                                                                             # Reproduction rate
-                                                                             titlePanel(HTML("<br><h2>Reproduction Rate</h3>")),
-                                                                             plotlyOutput("reproductionPlot")
+                                                                             
+                                                                             # Mortality rate
+                                                                             titlePanel(HTML("<br><h2>Mortality Rate </h2>")),
+                                                                             plotlyOutput("mortalityPlot")
                                                                     )
                                                         )
                                                     ),
