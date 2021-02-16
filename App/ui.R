@@ -204,6 +204,8 @@ shinyUI(fluidPage(
                                                                              titlePanel(HTML("<br><h2>Reproduction Rate</h3>")),
                                                                              plotlyOutput("reproductionPlot")
                                                                     ),
+                                                                    
+                                                                    # Detailed mortality results
                                                                     tabPanel("Illness Severity", value="severity",
                                                                              
                                                                              # Time series by age group
@@ -234,6 +236,35 @@ shinyUI(fluidPage(
                                                                              # Mortality rate
                                                                              titlePanel(HTML("<br><h2>Mortality Rate </h2>")),
                                                                              plotlyOutput("mortalityPlot")
+                                                                    ),
+                                                                    
+                                                                    # Detailed vaccinations
+                                                                    tabPanel("Vaccinations and Immunity", value="vax",
+                                                                             # Time series overall
+                                                                             titlePanel(HTML("<h2>Time Series of Immunity, Overall")),
+                                                                             titlePanel(HTML("<h3>Total Immunity")),
+                                                                             plotlyOutput("totalImmunityTS"),
+                                                                             
+                                                                             titlePanel(HTML("<h3>Immunity Types by Proportion</h3>")),
+                                                                             plotlyOutput("immunityProportionTS"),
+                                                                             
+                                                                             # Time series by age group
+                                                                             titlePanel(HTML("<br><h2>Time Series of Immunity, By Age Group</h3>")),
+                                                                             fluidRow(
+                                                                                 column(width=6, align="center",
+                                                                                        titlePanel(HTML("<h3>Cumulative Vaccinations</h3>")),
+                                                                                        plotlyOutput("totalVaxImmunityTS")
+                                                                                 ),
+                                                                                 column(width=6, align="center",
+                                                                                        titlePanel(HTML("<h3>New Vaccinations</h3>")),
+                                                                                        plotlyOutput("newVaxImmunityTS")
+                                                                                 ),
+                                                                             ),
+                                                                             titlePanel(HTML("<h3>Active Post-Infection Immunity</h3>")),
+                                                                             plotlyOutput("activePiImmunityTS"),
+                                                                             
+                                                                             # Table of results
+                                                                             titlePanel("<h2>Table</h2>")
                                                                     )
                                                         )
                                                     ),

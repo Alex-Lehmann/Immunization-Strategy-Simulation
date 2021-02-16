@@ -61,7 +61,16 @@ shinyServer(function(input, output, session){
                          Active_50s = 0,
                          Active_60s = 0,
                          Active_70s = 0,
-                         Active_Over80 = 0)
+                         Active_Over80 = 0,
+                         
+                         Immune_Under20 = 0,
+                         Immune_20s = 0,
+                         Immune_30s = 0,
+                         Immune_40s = 0,
+                         Immune_50s = 0,
+                         Immune_60s = 0,
+                         Immune_70s = 0,
+                         Immune_Over80 = 0)
         
         # Display busy dialog
         show_modal_spinner(spin="swapping-squares", color="#112446", text="Simulating...")
@@ -77,7 +86,16 @@ shinyServer(function(input, output, session){
                          Active_50s = sim_activeByAge(agents, "50s")*input$paramScaling,
                          Active_60s = sim_activeByAge(agents, "60s")*input$paramScaling,
                          Active_70s = sim_activeByAge(agents, "70s")*input$paramScaling,
-                         Active_Over80 = sim_activeByAge(agents, "over80")*input$paramScaling)
+                         Active_Over80 = sim_activeByAge(agents, "over80")*input$paramScaling,
+                         
+                         Immune_Under20 = sim_immuneByAge(agents, "under20")*input$paramScaling,
+                         Immune_20s = sim_immuneByAge(agents, "20s")*input$paramScaling,
+                         Immune_30s = sim_immuneByAge(agents, "30s")*input$paramScaling,
+                         Immune_40s = sim_immuneByAge(agents, "40s")*input$paramScaling,
+                         Immune_50s = sim_immuneByAge(agents, "50s")*input$paramScaling,
+                         Immune_60s = sim_immuneByAge(agents, "60s")*input$paramScaling,
+                         Immune_70s = sim_immuneByAge(agents, "70s")*input$paramScaling,
+                         Immune_Over80 = sim_immuneByAge(agents, "over80")*input$paramScaling)
         
         # Run simulation
         for (i in 1:nIter){
@@ -287,8 +305,7 @@ shinyServer(function(input, output, session){
             pivot_longer(!Date, names_to="AgeGroup", values_to="Active Cases") %>%
             mutate(`Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) %>% # For legend order
             ggplot(aes(x=Date, y=`Active Cases`, color=`Age Group`)) +
-            geom_line() +
-            ylab("Active Cases")
+            geom_line()
         
         ggplotly(plot) %>%
             layout(legend=list(orientation="h", y=1.1),
@@ -304,8 +321,7 @@ shinyServer(function(input, output, session){
             pivot_longer(!Date, names_to="AgeGroup", values_to="Total Cases") %>%
             mutate(`Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) %>% # For legend order
             ggplot(aes(x=Date, y=`Total Cases`, color=`Age Group`)) +
-            geom_line() +
-            ylab("Cumulative Cases")
+            geom_line()
         
         ggplotly(plot) %>%
             layout(legend=list(orientation="h", y=1.2),
@@ -386,8 +402,7 @@ shinyServer(function(input, output, session){
                    AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
                    `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) %>% # For legend order
             ggplot(aes(x=Date, y=`Total Deaths`, color=`Age Group`)) +
-            geom_line() +
-            ylab("Cumulative Deaths")
+            geom_line()
         
         ggplotly(plot) %>%
             layout(legend=list(orientation="h", y=1.2),
@@ -400,13 +415,12 @@ shinyServer(function(input, output, session){
         plot = values$results %>%
             select(Date, starts_with("Deaths")) %>%
             mutate(across(starts_with("Deaths"), function(x){ c(NA, diff(x)) })) %>%
-            pivot_longer(!Date, names_to="AgeGroup", values_to="New Cases") %>%
+            pivot_longer(!Date, names_to="AgeGroup", values_to="New Deaths") %>%
             mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
                    AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
                    `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) %>% # For legend order
-            ggplot(aes(x=Date, y=`New Cases`, color=`Age Group`)) +
-            geom_line() +
-            ylab("New Deaths")
+            ggplot(aes(x=Date, y=`New Deaths`, color=`Age Group`)) +
+            geom_line()
         
         ggplotly(plot) %>%
             layout(legend=list(orientation="h", y=1.2),
@@ -487,11 +501,122 @@ shinyServer(function(input, output, session){
             geom_line(color="#DC2824")
             
         ggplotly(plot) %>%
-            layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
+            layout(legend=list(orientation="h", y=1.1),
+                   showlegend=TRUE, hovermode="x", spikedistance=-1,
                    xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
                    yaxis=list(fixedrange=TRUE)) %>%
             config(displayModeBar = FALSE)
     })
+    
+    #######################################################################################
+    # Vaccination and immunity plots ######################################################
+    
+    output$totalImmunityTS = renderPlotly({
+        
+        forStack = values$results %>%
+            transmute(Date = Date,
+                      `Post-Infection` = rowSums(across(starts_with("Immune"))),
+                      Vaccinated = rowSums(across(starts_with("Vax")))) %>%
+            pivot_longer(!Date, names_to="Immunity Type", values_to="Count")
+        
+        forLine = forStack %>%
+            group_by(Date) %>%
+            summarize(Total = sum(Count)) %>%
+            pull(Total)
+        
+        plot = forStack %>%
+            mutate(`Total Immune` = rep(forLine, each=2)) %>%
+            ggplot(aes(x=Date)) +
+            geom_area(aes(y=Count, fill=`Immunity Type`), alpha=0.8) +
+            geom_line(aes(y=`Total Immune`), color="#ffffff", alpha=0) +
+            scale_fill_manual(values=c("Post-Infection" = "#4CAF50", "Vaccinated" = "#428BCA"))
+        
+        ggplotly(plot) %>%
+            layout(legend=list(orientation="h", y=1.1),
+                   showlegend=TRUE, hovermode="x", spikedistance=-1,
+                   xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
+    })
+    
+    output$immunityProportionTS = renderPlotly({
+        
+        plot = values$results %>%
+            mutate(TotalNatural = rowSums(across(starts_with("Immune"))),
+                   TotalVax = rowSums(across(starts_with("Vax"))),
+                   TotalImmune = TotalNatural + TotalVax) %>%
+            transmute(Date = Date,
+                      `Post-Infection` = round(TotalNatural / TotalImmune, 4),
+                      Vaccinated = round(TotalVax / TotalImmune, 4)) %>%
+            pivot_longer(!Date, names_to="Immunity Type", values_to="Proportion") %>%
+            ggplot(aes(x=Date, y=Proportion, fill=`Immunity Type`)) +
+            geom_area(alpha=0.8) +
+            scale_fill_manual(values=c("Post-Infection" = "#4CAF50", "Vaccinated" = "#428BCA"))
+        
+        ggplotly(plot) %>%
+            layout(legend=list(orientation="h", y=1.1),
+                   showlegend=TRUE, hovermode="x", spikedistance=-1,
+                   xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
+    })
+    
+    output$totalVaxImmunityTS = renderPlotly({
+        
+        plot = values$results %>%
+            select(Date, starts_with("Vax")) %>%
+            pivot_longer(!Date, names_to="AgeGroup", values_to="Total Vaccinations") %>%
+            mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
+                   AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
+                   `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) %>% # For legend order
+            ggplot(aes(x=Date, y=`Total Vaccinations`, color=`Age Group`)) +
+            geom_line()
+            
+        ggplotly(plot) %>%
+            layout(legend=list(orientation="h", y=1.2),
+                   xaxis=list(fixedrange=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
+    })
+    
+    output$newVaxImmunityTS = renderPlotly({
+        
+        plot = values$results %>%
+            select(Date, starts_with("Vax")) %>%
+            mutate(across(starts_with("Vax"), function(x){ c(NA, diff(x)) })) %>%
+            pivot_longer(!Date, names_to="AgeGroup", values_to="New Vaccinations") %>%
+            mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
+                   AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
+                   `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) %>% # For legend order
+            ggplot(aes(x=Date, y=`New Vaccinations`, color=`Age Group`)) +
+            geom_line()
+        
+        ggplotly(plot) %>%
+            layout(legend=list(orientation="h", y=1.2),
+                   xaxis=list(fixedrange=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
+    })
+    
+    output$activePiImmunityTS = renderPlotly({
+        
+        plot = values$results %>%
+            select(Date, starts_with("Immune")) %>%
+            pivot_longer(!Date, names_to="AgeGroup", values_to="Total Post-Infection") %>%
+            mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
+                   AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
+                   `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) %>% # For legend order
+            ggplot(aes(x=Date, y=`Total Post-Infection`, color=`Age Group`)) +
+            geom_line()
+        
+        ggplotly(plot) %>%
+            layout(legend=list(orientation="h", y=1.2),
+                   xaxis=list(fixedrange=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
+    })
+    
+    
     
     #######################################################################################
     # User-defined metric linked sliders ##################################################

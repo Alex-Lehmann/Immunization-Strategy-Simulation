@@ -165,8 +165,17 @@ sim_results = function(state, results, iter, scaleFactor=1){
              sim_activeByAge(state, "70s"),
              sim_activeByAge(state, "over80")) * scaleFactor
   
+  immune = c(sim_immuneByAge(state, "under20"),
+             sim_immuneByAge(state, "20s"),
+             sim_immuneByAge(state, "30s"),
+             sim_immuneByAge(state, "40s"),
+             sim_immuneByAge(state, "50s"),
+             sim_immuneByAge(state, "60s"),
+             sim_immuneByAge(state, "70s"),
+             sim_immuneByAge(state, "over80")) * scaleFactor
+  
   # Update simulation results
-  results = rbind(results, c(iter, cases, deaths, vax, active))
+  results = rbind(results, c(iter, cases, deaths, vax, active, immune))
   
   return(results)
 }
@@ -199,4 +208,11 @@ sim_activeByAge = function(state, ages){
     filter(AgeGroup == ages) %>%
     summarize(Active = sum(State %in% c(26, 25))) %>%
     pull(Active)
+}
+
+sim_immuneByAge = function(state, ages){
+  state %>%
+    filter(AgeGroup == ages) %>%
+    summarize(Immune = sum(State %in% 1:24)) %>%
+    pull(Immune)
 }
