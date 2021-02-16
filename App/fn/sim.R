@@ -34,8 +34,10 @@ sim_make_agents = function(strategy="random", scaleFactor=1){
     
     # Generate new agents
     nAgents = round(constants$Population / scaleFactor)
+    
     stateCounts = round(pull(caseStatus, age) / scaleFactor)
     states = sample(c(rep(0, nAgents - sum(stateCounts)), rep(1:26, stateCounts)))
+    
     newAgents = tibble(UID = rep.int(0, nAgents),
                        AgeGroup = rep.int(age, nAgents),
                        State = states,
@@ -95,7 +97,7 @@ sim_iter = function(doses=82800, simState, scaleFactor=1){
     summarize(n()) %>%
     pull(`n()`)
   
-  nExposed = rpois(1, 0.5 * nContagious * 1.05) # Simulate exposures; divide by two since cases last two weeks
+  nExposed = rpois(1, round(0.5 * nContagious * 1.05)) # Simulate exposures; divide by two since cases last two weeks
   if (nExposed > nExposable) {nExposed = nExposable}
   toExpose = simState %>%
     filter(State %in% c(0,-1)) %>%

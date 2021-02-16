@@ -279,6 +279,24 @@ shinyServer(function(input, output, session){
     
     #######################################################################################
     # Epidemiological detail plots ########################################################
+    output$activeCasesTSbyAge = renderPlotly({
+        plot = values$results %>%
+            select(Date, Active_Under20, Active_20s, Active_30s, Active_40s, Active_50s, Active_60s, Active_70s, Active_Over80) %>%
+            rename(`Under 20` = Active_Under20, `20s` = Active_20s, `30s` = Active_30s, `40s` = Active_40s,
+                   `50s` = Active_50s, `60s` = Active_60s, `70s` = Active_70s, `Over 80` = Active_Over80) %>%
+            pivot_longer(!Date, names_to="AgeGroup", values_to="Active Cases") %>%
+            mutate(`Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) %>% # For legend order
+            ggplot(aes(x=Date, y=`Active Cases`, color=`Age Group`)) +
+            geom_line() +
+            ylab("Active Cases")
+        
+        ggplotly(plot) %>%
+            layout(legend=list(orientation="h", y=1.1),
+                   xaxis=list(fixedrange=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
+    })
+    
     output$totalCasesTSbyAge = renderPlotly({
         plot = values$results %>%
             select(Date, Cases_Under20, Cases_20s, Cases_30s, Cases_40s, Cases_50s, Cases_60s, Cases_70s, Cases_Over80) %>%
@@ -313,6 +331,28 @@ shinyServer(function(input, output, session){
                    yaxis=list(fixedrange=TRUE)) %>%
             config(displayModeBar = FALSE)
     })
+    
+    output$casesTable = renderDataTable({
+        
+        toTable = NULL
+        if (input$caseTableSelect == "New"){ # Difference cases columns if new cases data is requested
+            toTable = values$results %>%
+                mutate(across(starts_with("Cases_"), function(x){ c(NA, diff(x)) })) %>%
+                filter(Iteration > 0) %>%
+                select("Date", paste0("Cases_", c("Under20", "20s", "30s", "40s", "50s", "60s", "70s", "Over80")))
+        } else { # Otherwise, grab requested columns
+            toTable = values$results %>%
+                select("Date", paste0(input$caseTableSelect, c("Under20", "20s", "30s", "40s", "50s", "60s", "70s", "Over80")))
+        }
+        toTable = toTable %>%
+            mutate(Total = rowSums(across(!matches("Date")))) %>%
+            relocate(Total, .after=Date)
+        colnames(toTable) = colnames(toTable) %>%
+            str_extract("(?<=_).*|Date|Total") %>%
+            str_replace_all(pattern="r", replacement="r ")
+        
+        toTable
+    }, options=list(pageLength=8, bFilter=FALSE), filter="none")
     
     output$caseOutcomePlot = renderPlotly({
         
@@ -356,14 +396,16 @@ shinyServer(function(input, output, session){
         plot = values$results %>%
             mutate(Cases = Cases_Under20 + Cases_20s + Cases_30s + Cases_40s + Cases_50s + Cases_60s + Cases_70s + Cases_Over80,
                    Cases = c(NA, diff(Cases)),
+                   Deaths = Deaths_Under20 + Deaths_20s + Deaths_30s + Deaths_40s + Deaths_50s + Deaths_60s + Deaths_70s + Deaths_Over80,
+                   Deaths = c(NA, diff(Deaths)),
                    Active = Active_Under20 + Active_20s + Active_30s + Active_40s + Active_50s + Active_60s + Active_70s + Active_Over80) %>%
-            filter(Iteration > 0) %>%
-            transmute(Date = Date, `Reproduction Rate` = round(2*Cases / Active, 2)) %>% # Times 2 because of contagious period
+            transmute(Date = Date,
+                      `Reproduction Rate` = round(2*Cases / (lag(Active) - Deaths), 2)) %>%
             ggplot(aes(x=Date, y=`Reproduction Rate`)) +
             geom_point(color="orange") +
             geom_line(color="orange") +
-            geom_hline(aes(yintercept=1))
-
+            geom_hline(aes(yintercept=1), alpha=0.5)
+        
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
                    xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
