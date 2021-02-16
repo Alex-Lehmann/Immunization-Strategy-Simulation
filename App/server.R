@@ -1,5 +1,10 @@
 library(shiny)
 
+# Color palette
+casesColor = "#FFB000"
+deathsColor = "#DC267F"
+vaxColor = "#648FFF"
+
 # Base constants
 baseCases = 568919
 baseDeaths = 21368
@@ -167,8 +172,8 @@ shinyServer(function(input, output, session){
             transmute(Date = Date,
                       `Active Cases` = Active_Under20 + Active_20s + Active_30s + Active_40s + Active_50s + Active_60s + Active_70s + Active_Over80) %>%
             ggplot(aes(x=Date, y=`Active Cases`)) +
-            geom_point(color="#4CAF50") +
-            geom_line(color="#4CAF50")
+            geom_point(color=casesColor) +
+            geom_line(color=casesColor)
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
                    xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
@@ -180,8 +185,8 @@ shinyServer(function(input, output, session){
         plot = values$overallCases %>%
             filter(!is.na(`Total Cases`)) %>%
             ggplot(aes(x=Date, y=`Total Cases`)) +
-            geom_point(color="#4CAF50") +
-            geom_line(color="#4CAF50") +
+            geom_point(color=casesColor) +
+            geom_line(color=casesColor) +
             ylab("Cumulative Cases")
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
@@ -194,8 +199,8 @@ shinyServer(function(input, output, session){
         plot = values$overallCases %>%
             filter(!is.na(`New Cases`)) %>%
             ggplot(aes(x=Date, y=`New Cases`)) +
-            geom_point(color="#4CAF50") +
-            geom_line(color="#4CAF50") +
+            geom_point(color=casesColor) +
+            geom_line(color=casesColor) +
             ylab("New Cases")
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
@@ -209,8 +214,8 @@ shinyServer(function(input, output, session){
         plot = values$overallDeaths %>%
             filter(!is.na(`Total Deaths`)) %>%
             ggplot(aes(x=Date, y=`Total Deaths`)) +
-            geom_point(color="#DC2824") +
-            geom_line(color="#DC2824") +
+            geom_point(color=deathsColor) +
+            geom_line(color=deathsColor) +
             ylab("Cumulative Deaths")
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
@@ -223,8 +228,8 @@ shinyServer(function(input, output, session){
         plot = values$overallDeaths %>%
             filter(!is.na(`New Deaths`)) %>%
             ggplot(aes(x=Date, y=`New Deaths`)) +
-            geom_point(color="#DC2824") +
-            geom_line(color="#DC2824") +
+            geom_point(color=deathsColor) +
+            geom_line(color=deathsColor) +
             ylab("New Deaths")
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
@@ -238,8 +243,8 @@ shinyServer(function(input, output, session){
         plot = values$overallVax %>%
             filter(!is.na(`Total Vaccinations`)) %>%
             ggplot(aes(x=Date, y=`Total Vaccinations`)) +
-            geom_point(color="#428BCA") +
-            geom_line(color="#428BCA") +
+            geom_point(color=vaxColor) +
+            geom_line(color=vaxColor) +
             ylab("Cumulative Vaccinations")
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
@@ -252,8 +257,8 @@ shinyServer(function(input, output, session){
         plot = values$overallVax %>%
             filter(!is.na(`New Vaccinations`)) %>%
             ggplot(aes(x=Date, y=`New Vaccinations`)) +
-            geom_point(color="#428BCA") +
-            geom_line(color="#428BCA") +
+            geom_point(color=vaxColor) +
+            geom_line(color=vaxColor) +
             ylab("New Vaccinations")
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
@@ -380,8 +385,8 @@ shinyServer(function(input, output, session){
             transmute(Date = Date,
                       `Reproduction Rate` = round(2*Cases / (lag(Active) - Deaths), 2)) %>%
             ggplot(aes(x=Date, y=`Reproduction Rate`)) +
-            geom_point(color="#4CAF50") +
-            geom_line(color="#4CAF50") +
+            geom_point(color=casesColor) +
+            geom_line(color=casesColor) +
             geom_hline(aes(yintercept=1), alpha=0.5)
         
         ggplotly(plot) %>%
@@ -482,7 +487,7 @@ shinyServer(function(input, output, session){
             ggplot(aes(x=`Age Group`, y=Cases, fill=Outcome)) +
             geom_bar(stat="identity", position="stack") +
             ylab("Cumulative Count") +
-            scale_fill_manual(values=c("#DC2824", "#4CAF50")) +
+            scale_fill_manual(values=c(deathsColor, casesColor)) +
             theme(legend.position="none")
         
         ggplotly(plot) %>%
@@ -497,8 +502,8 @@ shinyServer(function(input, output, session){
                    `Mortality Rate` = round(Deaths / Active, 4)) %>%
             filter(Iteration > 0) %>%
             ggplot(aes(x=Date, y=`Mortality Rate`)) +
-            geom_point(color="#DC2824") +
-            geom_line(color="#DC2824")
+            geom_point(color=deathsColor) +
+            geom_line(color=deathsColor)
             
         ggplotly(plot) %>%
             layout(legend=list(orientation="h", y=1.1),
@@ -529,7 +534,7 @@ shinyServer(function(input, output, session){
             ggplot(aes(x=Date)) +
             geom_area(aes(y=Count, fill=`Immunity Type`), alpha=0.8) +
             geom_line(aes(y=`Total Immune`), color="#ffffff", alpha=0) +
-            scale_fill_manual(values=c("Post-Infection" = "#4CAF50", "Vaccinated" = "#428BCA"))
+            scale_fill_manual(values=c("Post-Infection"=casesColor, "Vaccinated"=vaxColor))
         
         ggplotly(plot) %>%
             layout(legend=list(orientation="h", y=1.1),
@@ -551,7 +556,7 @@ shinyServer(function(input, output, session){
             pivot_longer(!Date, names_to="Immunity Type", values_to="Proportion") %>%
             ggplot(aes(x=Date, y=Proportion, fill=`Immunity Type`)) +
             geom_area(alpha=0.8) +
-            scale_fill_manual(values=c("Post-Infection" = "#4CAF50", "Vaccinated" = "#428BCA"))
+            scale_fill_manual(values=c("Post-Infection"=casesColor, "Vaccinated"=vaxColor))
         
         ggplotly(plot) %>%
             layout(legend=list(orientation="h", y=1.1),

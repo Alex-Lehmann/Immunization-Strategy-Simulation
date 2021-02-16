@@ -1,11 +1,16 @@
 library(shiny)
 
 # Load packages
-packages = c("tidyverse", "lubridate", "shinybusy", "shinyWidgets", "plotly", "DT")
+packages = c("tidyverse", "lubridate", "shinybusy", "shinyWidgets", "plotly", "DT", "viridis")
 
 source("fn/loadPackages.R")
 loadPackages(packages)
 source("fn/sim.R")
+
+# Color palette
+casesColor = "#FFB000"
+deathsColor = "#DC267F"
+vaxColor = "#648FFF"
 
 shinyUI(fluidPage(
     # Global page settings
@@ -95,15 +100,15 @@ shinyUI(fluidPage(
                                                                              fluidRow(
                                                                                  column(width=3, align="center",
                                                                                         actionButton("summaryCases", HTML("<h3><b>Total Cases</h3><h4>-</h4></b>"), width="100%",
-                                                                                                     style="border-radius:6px; background-color:#4CAF50; box-shadow:0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)")
+                                                                                                     style=paste0("border-radius:6px; background-color:", casesColor, "; box-shadow:0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)"))
                                                                                  ),
                                                                                  column(width=3, align="center",
                                                                                         actionButton("summaryDeaths", HTML("<h3><b>Total Deaths</h3><h4>-</h4></b>"), width="100%",
-                                                                                                     style="border-radius:6px; background-color:#DC2824; box-shadow:0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)")
+                                                                                                     style=paste0("border-radius:6px; background-color:", deathsColor, "; box-shadow:0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)"))
                                                                                  ),
                                                                                  column(width=3, align="center",
                                                                                         actionButton("summaryVax", HTML("<h3><b>Total Vaccinated</h3><h4>-</h4></b>"), width="100%",
-                                                                                                     style="border-radius:6px; background-color:#428BCA; box-shadow:0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)")
+                                                                                                     style=paste0("border-radius:6px; background-color:", vaxColor, "; box-shadow:0 8px 16px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19)"))
                                                                                  ),
                                                                                  column(width=3, align="center",
                                                                                         actionButton("summaryMetric", HTML("<h3><b>Strategy Effectiveness</h3><h4>-</h4></b>"), width="100%",
@@ -261,10 +266,7 @@ shinyUI(fluidPage(
                                                                                  ),
                                                                              ),
                                                                              titlePanel(HTML("<h3>Active Post-Infection Immunity</h3>")),
-                                                                             plotlyOutput("activePiImmunityTS"),
-                                                                             
-                                                                             # Table of results
-                                                                             titlePanel("<h2>Table</h2>")
+                                                                             plotlyOutput("activePiImmunityTS")
                                                                     )
                                                         )
                                                     ),
