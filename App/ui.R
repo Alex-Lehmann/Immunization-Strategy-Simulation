@@ -53,7 +53,11 @@ shinyUI(fluidPage(
                                                                                     tabPanelBody(NULL, value="vax",
                                                                                                  HTML("<h3>Provincial Vaccine Availability</h3>
                                                                                                       <h4>Vaccine Doses Per Week</h4>
-                                                                                                      <p>This parameter controls the mean number of vaccine doses administered per week. Passing a value of 0 results in a simulation with no vaccinations.")
+                                                                                                      <p>This parameter controls the mean number of vaccine doses administered per week. Passing a value of 0 results in a simulation with no vaccinations.<br>
+                                                                                                      <h4>Full Efficacy</h4>
+                                                                                                      <p>Use this parameter to set the efficacy of the vaccine <i>after two doses</i>. An agent who is exposed to SARS-CoV-2 after two doses of vaccine will be protected from infection according to the selected value of this parameter.<br>
+                                                                                                      <h4>Partial Efficacy</h4>
+                                                                                                      <p>Use this paramter to set the efficacy of the vaccine <i>after a single dose</i>. An agent who is exposed to SARS-CoV-2 after one dose of vaccine will be protected from infection according to the selected value of this parameter.<br>")
                                                                                     ),
                                                                                     tabPanelBody(NULL, value="strategy",
                                                                                                  HTML("<h3>Distribution Strategy</h3>
@@ -62,21 +66,23 @@ shinyUI(fluidPage(
                                                                                                       <ul>
                                                                                                         <li><b>Highest-Risk First:</b> Vaccine distribution will prioritize individuals in age groups with higher COVID-19 mortality rates.</li>
                                                                                                         <li><b>Random:</b> Vaccines are distributed randomly with no priority given to any group.</li>
-                                                                                                      </ul>")
+                                                                                                      </ul><br>
+                                                                                                      <h4>Number of Doses Per Patient</h4>
+                                                                                                      <p>This choice determines how many doses of vaccine each agent may receive. A one-dose strategy will result in all agents receiving a only single dose while a two-dose strategy will result in all agents receiving a second dose after 4 weeks.<br>")
                                                                                     ),
                                                                                     tabPanelBody(NULL, value="sim",
                                                                                                  HTML("<h3>Simulation Settings</h3>
                                                                                                       <h4>Seed Value</h4>
-                                                                                                      <p>Users may pass a seed value to the simulation to ensure reproducible results. Pass an empty value to run the simulation without a seed value.
+                                                                                                      <p>Users may pass a seed value to the simulation to ensure reproducible results. Pass an empty value to run the simulation without a seed value.<br>
                                                                                                       <h4>Agent Scaling Factor</h4>
-                                                                                                      <p>This parameter allows users to increase the speed of the simulation procedure at the expense of some accuracy. Increase this value to decrease computation time.")
+                                                                                                      <p>This parameter allows users to increase the speed of the simulation procedure at the expense of some accuracy. Increase this value to decrease computation time.<br>")
                                                                                     ),
                                                                                     tabPanelBody(NULL, value="metric",
                                                                                                  HTML("<h3>Strategy Effectiveness</h3>
                                                                                                       <h4>Reduce Cases</h4>
-                                                                                                      <p>This parameter determines the amount of weight given to reducing the total number of cases when comparing the currently-selected strategy against no vaccinations. Increasing this value causes the metric to favour a reduction in cases rather than a reduction in deaths.
+                                                                                                      <p>This parameter determines the amount of weight given to reducing the total number of cases when comparing the currently-selected strategy against no vaccinations. Increasing this value causes the metric to favour a reduction in cases rather than a reduction in deaths.<br>
                                                                                                       <h4>Reduce Deaths</h4>
-                                                                                                      <p>This parameter determines the amount of weight given to reducing the total number of deaths when comparing the currently-selected strategy against no vaccinations. Increasing this value causes the metric to favour a reduction in deaths rather than a reduction in cases.")
+                                                                                                      <p>This parameter determines the amount of weight given to reducing the total number of deaths when comparing the currently-selected strategy against no vaccinations. Increasing this value causes the metric to favour a reduction in deaths rather than a reduction in cases.<br>")
                                                                                     )
                                                                         )
                                                                )
@@ -444,12 +450,6 @@ shinyUI(fluidPage(
                                                                            tabPanel("Reproduction Rate", includeHTML("ref/reproductionRate.html")),
                                                                            tabPanel("Mortality", includeHTML("ref/mortality.html")),
                                                                            tabPanel("Post-Infection Immunity", includeHTML("ref/postInfectionImmunity.html"))
-                                                               )
-                                                      ),
-                                                      tabPanel("Vaccines",
-                                                               tabsetPanel(type="pills",
-                                                                           tabPanel("Efficacy", includeHTML("ref/efficacy.html")),
-                                                                           tabPanel("Dosages", includeHTML("ref/dosages.html"))
                                                                )
                                                       ),
                                                       tabPanel("Vaccination Strategies",
