@@ -120,7 +120,7 @@ shinyServer(function(input, output, session){
             update_modal_progress(value=progress, text=paste0("Simulating iteration ", i," of " ,nIter, "..."))
             
             print(paste0("Starting iteration ", i))
-            agents = sim_iter(paramVax, input$paramDoses, agents, input$paramScaling)
+            agents = sim_iter(paramVax, input$paramFullEff, input$paramPartEff, input$paramDoses, agents, input$paramScaling)
             
             results = sim_results(agents, results, i, input$paramScaling)
             print(paste0("Iteration ", i, " complete"))

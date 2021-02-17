@@ -344,7 +344,7 @@ shinyUI(fluidPage(
                                                             column(width=3,
                                                                    fluidRow(
                                                                        column(width=10,
-                                                                              helpText(HTML("<h4>Provincial Vaccine Availability</h4>"))
+                                                                              helpText(HTML("<h4>Vaccine Parameters</h4>"))
                                                                        ),
                                                                        column(width=2, align="right",
                                                                               actionButton("vaxHelpBn", NULL, icon("question"),
@@ -354,7 +354,13 @@ shinyUI(fluidPage(
                                                                    
                                                                    # Number of doses input
                                                                    numericInput("paramVax", "Vaccine Doses Per Week",
-                                                                                value=82800, step=100)
+                                                                                value=82800, step=100),
+                                                                   
+                                                                   # Efficacy inputs
+                                                                   sliderInput("paramFullEff", "Full Efficacy", ticks=FALSE, post="%",
+                                                                               min=0, max=100, value=95),
+                                                                   sliderInput("paramPartEff", "Partial Efficacy", ticks=FALSE, post="%",
+                                                                               min=0, max=100, value=54)
                                                             ),
                                                             
                                                             # Vaccination strategy settings

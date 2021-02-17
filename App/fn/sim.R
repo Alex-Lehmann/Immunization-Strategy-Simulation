@@ -7,9 +7,6 @@ reference = tibble(AgeGroup =   c("under20", "20s"  , "30s"  , "40s"  , "50s"  ,
 confCases = read_csv("ref/data/conposcovidloc.csv", col_types=cols()) %>%
   select(Accurate_Episode_Date, Age_Group, Outcome1) %>%
   mutate(Accurate_Episode_Date = as_date(Accurate_Episode_Date))
-
-vaxEff = 0.95
-vaxPartialEff = 0.54
 ###########################################################################################
 # Simulation initialization ###############################################################
 sim_make_agents = function(strategy="random", scaleFactor=1){
@@ -79,7 +76,7 @@ sim_make_agents = function(strategy="random", scaleFactor=1){
 #   *2-4: waiting for second dose (partial immunity)
 #   *5: new second dose (partial immunity)
 #   *6: fully vaccinated
-sim_iter = function(doses, strategy, simState, scaleFactor=1){
+sim_iter = function(doses, vaxEff, vaxPartialEff, strategy, simState, scaleFactor=1){
   
   # Kill off fatal cases
   atRisk = simState %>% # Grab infected agents
@@ -112,8 +109,8 @@ sim_iter = function(doses, strategy, simState, scaleFactor=1){
     sample(nExposed)
   
   simState = mutate(simState, State = ifelse(UID %in% toExpose & (Vax == 0 |  # Update agents
-                                                                  Vax %in% 1:5 & rbinom(1, 1, vaxPartialEff) == 0 |
-                                                                  Vax == 6 & rbinom(1, 1, vaxEff) == 0),
+                                                                  Vax %in% 1:5 & rbinom(1, 1, vaxPartialEff/100) == 0 |
+                                                                  Vax == 6 & rbinom(1, 1, vaxEff/100) == 0),
                                              27, State))
   simState = mutate(simState, Infections = ifelse(State == 27, Infections + 1, Infections)) # Update infection count
   
