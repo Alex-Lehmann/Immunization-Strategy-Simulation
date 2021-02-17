@@ -22,6 +22,7 @@ shinyServer(function(input, output, session){
         
         # Localize dangerous inputs
         paramVax = input$paramVax
+        values$paramDoses = input$paramDoses
         
         # Validate inputs
         if (is.na(input$paramVax) | input$paramVax < 0){
@@ -119,7 +120,7 @@ shinyServer(function(input, output, session){
             update_modal_progress(value=progress, text=paste0("Simulating iteration ", i," of " ,nIter, "..."))
             
             print(paste0("Starting iteration ", i))
-            agents = sim_iter(paramVax, agents, input$paramScaling)
+            agents = sim_iter(paramVax, input$paramDoses, agents, input$paramScaling)
             
             results = sim_results(agents, results, i, input$paramScaling)
             print(paste0("Iteration ", i, " complete"))
@@ -148,9 +149,15 @@ shinyServer(function(input, output, session){
         values$simDeaths = values$overallDeaths %>%
             slice_tail(n=1) %>%
             pull(`Total Deaths`)
-        values$simVax = values$overallVax %>%
-            slice_tail(n=1) %>%
-            pull(`Total Fully Vaccinated`)
+        if (input$paramDoses == "Two Doses"){
+            values$simVax = values$overallVax %>%
+                slice_tail(n=1) %>%
+                pull(`Total Fully Vaccinated`)
+        } else {
+            values$simVax = values$overallVax %>%
+                slice_tail(n=1) %>%
+                pull(`Total Partially Vaccinated`)
+        }
         
         # Compute user-defined metric
         casesCoef = input$metricCases / 100
@@ -249,11 +256,21 @@ shinyServer(function(input, output, session){
     
     # Vaccinations time series
     output$summaryTotalVaxTS = renderPlotly({
-        plot = values$overallVax %>%
-            filter(!is.na(`Total Fully Vaccinated`)) %>%
-            ggplot(aes(x=Date, y=`Total Fully Vaccinated`)) +
-            geom_point(color=vaxColor) +
-            geom_line(color=vaxColor)
+        df = values$overallVax
+        plot = NULL
+        if (values$paramDoses == "Two Doses"){
+            plot = df %>%
+                filter(!is.na(`Total Fully Vaccinated`)) %>%
+                ggplot(aes(x=Date, y=`Total Fully Vaccinated`)) +
+                geom_point(color=vaxColor) +
+                geom_line(color=vaxColor)
+        } else {
+            plot = df %>%
+                filter(!is.na(`Total Partially Vaccinated`)) %>%
+                ggplot(aes(x=Date, y=`Total Partially Vaccinated`)) +
+                geom_point(color=vaxColor) +
+                geom_line(color=vaxColor)
+        }
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
                    xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
@@ -262,11 +279,21 @@ shinyServer(function(input, output, session){
     })
     
     output$summaryNewVaxsTS = renderPlotly({
-        plot = values$overallVax %>%
-            filter(!is.na(`New Fully Vaccinated`)) %>%
-            ggplot(aes(x=Date, y=`New Fully Vaccinated`)) +
-            geom_point(color=vaxColor) +
-            geom_line(color=vaxColor)
+        df = values$overallVax
+        plot = NULL
+        if (values$paramDoses == "Two Doses"){
+            plot = df %>%
+                filter(!is.na(`New Fully Vaccinated`)) %>%
+                ggplot(aes(x=Date, y=`New Fully Vaccinated`)) +
+                geom_point(color=vaxColor) +
+                geom_line(color=vaxColor)
+        } else {
+            plot = df %>%
+                filter(!is.na(`New Partially Vaccinated`)) %>%
+                ggplot(aes(x=Date, y=`New Partially Vaccinated`)) +
+                geom_point(color=vaxColor) +
+                geom_line(color=vaxColor)
+        }
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
                    xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),

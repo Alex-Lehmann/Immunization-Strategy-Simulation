@@ -372,7 +372,11 @@ shinyUI(fluidPage(
                                                                    # Preset strategy input
                                                                    selectInput("paramStrategy", "Presets",
                                                                                list("Highest-Risk First" = "risk",
-                                                                                    "Random" = "random"))
+                                                                                    "Random" = "random")),
+                                                                   
+                                                                   # Dosage selection
+                                                                   radioButtons("paramDoses", "Number of Doses Per Patient", inline=TRUE,
+                                                                                c("Two Doses", "One Dose"))
                                                             ),
                                                             
                                                             # Simulation settings

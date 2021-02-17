@@ -79,7 +79,7 @@ sim_make_agents = function(strategy="random", scaleFactor=1){
 #   *2-4: waiting for second dose (partial immunity)
 #   *5: new second dose (partial immunity)
 #   *6: fully vaccinated
-sim_iter = function(doses=82800, simState, scaleFactor=1){
+sim_iter = function(doses, strategy, simState, scaleFactor=1){
   
   # Kill off fatal cases
   atRisk = simState %>% # Grab infected agents
@@ -112,7 +112,7 @@ sim_iter = function(doses=82800, simState, scaleFactor=1){
     sample(nExposed)
   
   simState = mutate(simState, State = ifelse(UID %in% toExpose & (Vax == 0 |  # Update agents
-                                                                  Vax %in% 2:5 & rbinom(1, 1, vaxPartialEff) == 0 |
+                                                                  Vax %in% 1:5 & rbinom(1, 1, vaxPartialEff) == 0 |
                                                                   Vax == 6 & rbinom(1, 1, vaxEff) == 0),
                                              27, State))
   simState = mutate(simState, Infections = ifelse(State == 27, Infections + 1, Infections)) # Update infection count
@@ -121,7 +121,7 @@ sim_iter = function(doses=82800, simState, scaleFactor=1){
   if (doses != 0){
     # Get number of doses to be distributed this week
     nDoses = NULL
-    if (FALSE) { nDoses = rpois(1, round(doses / scaleFactor)) } # One-shot strategy
+    if (strategy == "One Dose") { nDoses = rpois(1, round(doses / scaleFactor)) } # One-shot strategy
     else { nDoses = rpois(1, round(doses / (2*scaleFactor))) } # Two-dose strategy
     
     # First doses
@@ -133,17 +133,19 @@ sim_iter = function(doses=82800, simState, scaleFactor=1){
     simState = mutate(simState, Vax = ifelse(UID %in% toFirstDose, 1, Vax)) # Update agents
     
     # Second doses
-    toSecondDose = simState %>% # Grab highest-priority uninfected persons waiting for second dose
-      filter(State %in% 0:24, Vax == 4) %>%
-      arrange(Ticket) %>%
-      slice_head(n=nDoses) %>%
-      pull(UID)
-    simState = mutate(simState, Vax = ifelse(UID %in% toSecondDose, 5, Vax))
+    if (strategy=="Two Doses"){
+      toSecondDose = simState %>% # Grab highest-priority uninfected persons waiting for second dose
+        filter(State %in% 0:24, Vax == 4) %>%
+        arrange(Ticket) %>%
+        slice_head(n=nDoses) %>%
+        pull(UID)
+      simState = mutate(simState, Vax = ifelse(UID %in% toSecondDose, 5, Vax))
+    }
   }
   
   # Progress time
   simState = mutate(simState, State = ifelse(State > 0, State - 1, State),
-                              Vax = ifelse(Vax %in% c(1:3, 5), Vax + 1, Vax))
+                              Vax = ifelse(Vax %in% c(1:3, 5) & strategy=="Two Doses", Vax + 1, Vax))
   
   return(simState)
 }
