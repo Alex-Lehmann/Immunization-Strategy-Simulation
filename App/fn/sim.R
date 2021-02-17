@@ -9,6 +9,7 @@ confCases = read_csv("ref/data/conposcovidloc.csv", col_types=cols()) %>%
   mutate(Accurate_Episode_Date = as_date(Accurate_Episode_Date))
 
 vaxEff = 0.95
+vaxPartialEff = 0.54
 ###########################################################################################
 # Simulation initialization ###############################################################
 sim_make_agents = function(strategy="random", scaleFactor=1){
@@ -43,7 +44,8 @@ sim_make_agents = function(strategy="random", scaleFactor=1){
                        State = states,
                        Risk = rep(constants$Risk, nAgents),
                        Infections = rep(0, nAgents),
-                       Ticket = rep.int(0, nAgents))
+                       Ticket = rep.int(0, nAgents),
+                       Vax = rep.int(0, nAgents))
     
     # Add new agents to simulation
     agents = rbind(agents, newAgents)
@@ -69,10 +71,15 @@ sim_make_agents = function(strategy="random", scaleFactor=1){
 #   *26; first week
 #   *25: second week
 #   *1-24: post-infection immunity
-#   *-1: vaccinated
 #   *-2: dead
+
+# Vaccination states:
+#   *0: unvaccinated
+#   *1: new vaccination
+#   *2-4: waiting for second dose (partial immunity)
+#   *5: new second dose (partial immunity)
+#   *6: fully vaccinated
 sim_iter = function(doses=82800, simState, scaleFactor=1){
-  doses = round(doses / scaleFactor)
   
   # Kill off fatal cases
   atRisk = simState %>% # Grab infected agents
@@ -93,33 +100,50 @@ sim_iter = function(doses=82800, simState, scaleFactor=1){
     summarize(n()) %>%
     pull(`n()`)
   nExposable = simState %>% # Get number of exposable persons
-    filter(State %in% c(0, -1)) %>%
+    filter(State == 0) %>%
     summarize(n()) %>%
     pull(`n()`)
   
   nExposed = rpois(1, round(0.5 * nContagious * 1.05)) # Simulate exposures; divide by two since cases last two weeks
   if (nExposed > nExposable) {nExposed = nExposable}
   toExpose = simState %>%
-    filter(State %in% c(0,-1)) %>%
+    filter(State == 0) %>%
     pull(UID) %>%
     sample(nExposed)
   
-  simState = mutate(simState, State = ifelse(UID %in% toExpose & (State == 0 | (State == -1 & rbinom(1, 1, vaxEff) == 0)), 27, State)) # Update agents
-  simState = mutate(simState, Infections = ifelse(State == 27, Infections + 1, Infections))
+  simState = mutate(simState, State = ifelse(UID %in% toExpose & (Vax == 0 |  # Update agents
+                                                                  Vax %in% 2:5 & rbinom(1, 1, vaxPartialEff) == 0 |
+                                                                  Vax == 6 & rbinom(1, 1, vaxEff) == 0),
+                                             27, State))
+  simState = mutate(simState, Infections = ifelse(State == 27, Infections + 1, Infections)) # Update infection count
   
   # Vaccinate uninfected agents
   if (doses != 0){
-    toVax = simState %>% # Grab highest-priority uninfected persons
-      filter(State %in% 0:24) %>%
-      arrange(Ticket) %>%
-      slice_head(n=rpois(1, doses)) %>%
-      pull(UID)
+    # Get number of doses to be distributed this week
+    nDoses = NULL
+    if (FALSE) { nDoses = rpois(1, round(doses / scaleFactor)) } # One-shot strategy
+    else { nDoses = rpois(1, round(doses / (2*scaleFactor))) } # Two-dose strategy
     
-    simState = mutate(simState, State = ifelse(UID %in% toVax, -1, State)) # Update agents
+    # First doses
+    toFirstDose = simState %>% # Grab highest-priority uninfected persons without previous vaccination
+      filter(State %in% 0:24, Vax == 0) %>%
+      arrange(Ticket) %>%
+      slice_head(n=nDoses) %>%
+      pull(UID)
+    simState = mutate(simState, Vax = ifelse(UID %in% toFirstDose, 1, Vax)) # Update agents
+    
+    # Second doses
+    toSecondDose = simState %>% # Grab highest-priority uninfected persons waiting for second dose
+      filter(State %in% 0:24, Vax == 4) %>%
+      arrange(Ticket) %>%
+      slice_head(n=nDoses) %>%
+      pull(UID)
+    simState = mutate(simState, Vax = ifelse(UID %in% toSecondDose, 5, Vax))
   }
   
-  # Progress cases
-  simState = mutate(simState, State = ifelse(State > 0, State - 1, State))
+  # Progress time
+  simState = mutate(simState, State = ifelse(State > 0, State - 1, State),
+                              Vax = ifelse(Vax %in% c(1:3, 5), Vax + 1, Vax))
   
   return(simState)
 }
@@ -147,14 +171,23 @@ sim_results = function(state, results, iter, scaleFactor=1){
              sim_deathsByAge(state, "70s"),
              sim_deathsByAge(state, "over80")) * scaleFactor
   
-  vax = c(sim_vaxByAge(state, "under20"),
-          sim_vaxByAge(state, "20s"),
-          sim_vaxByAge(state, "30s"),
-          sim_vaxByAge(state, "40s"),
-          sim_vaxByAge(state, "50s"),
-          sim_vaxByAge(state, "60s"),
-          sim_vaxByAge(state, "70s"),
-          sim_vaxByAge(state, "over80")) * scaleFactor
+  fullVax = c(sim_fullVaxByAge(state, "under20"),
+              sim_fullVaxByAge(state, "20s"),
+              sim_fullVaxByAge(state, "30s"),
+              sim_fullVaxByAge(state, "40s"),
+              sim_fullVaxByAge(state, "50s"),
+              sim_fullVaxByAge(state, "60s"),
+              sim_fullVaxByAge(state, "70s"),
+              sim_fullVaxByAge(state, "over80")) * scaleFactor
+  
+  partialVax = c(sim_partialVaxByAge(state, "under20"),
+                 sim_partialVaxByAge(state, "20s"),
+                 sim_partialVaxByAge(state, "30s"),
+                 sim_partialVaxByAge(state, "40s"),
+                 sim_partialVaxByAge(state, "50s"),
+                 sim_partialVaxByAge(state, "60s"),
+                 sim_partialVaxByAge(state, "70s"),
+                 sim_partialVaxByAge(state, "over80")) * scaleFactor
   
   active = c(sim_activeByAge(state, "under20"),
              sim_activeByAge(state, "20s"),
@@ -175,7 +208,7 @@ sim_results = function(state, results, iter, scaleFactor=1){
              sim_immuneByAge(state, "over80")) * scaleFactor
   
   # Update simulation results
-  results = rbind(results, c(iter, cases, deaths, vax, active, immune))
+  results = rbind(results, c(iter, cases, deaths, fullVax, partialVax, active, immune))
   
   return(results)
 }
@@ -196,10 +229,17 @@ sim_deathsByAge = function(state, ages){
     pull(Deaths)
 }
 
-sim_vaxByAge = function(state, ages){
+sim_fullVaxByAge = function(state, ages){
   state %>%
     filter(AgeGroup == ages) %>%
-    summarize(Vax = sum(State == -1)) %>%
+    summarize(Vax = sum(Vax == 6)) %>%
+    pull(Vax)
+}
+
+sim_partialVaxByAge = function(state, ages){
+  state %>%
+    filter(AgeGroup == ages) %>%
+    summarize(Vax = sum(Vax %in% 1:5)) %>%
     pull(Vax)
 }
 

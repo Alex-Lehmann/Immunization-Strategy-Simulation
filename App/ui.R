@@ -1,7 +1,7 @@
 library(shiny)
 
 # Load packages
-packages = c("tidyverse", "lubridate", "shinybusy", "shinyWidgets", "plotly")
+packages = c("tidyverse", "lubridate", "shinybusy", "shinyWidgets", "plotly", "DT")
 
 source("fn/loadPackages.R")
 loadPackages(packages)
@@ -266,19 +266,43 @@ shinyUI(fluidPage(
                                                                              plotlyOutput("immunityProportionTS"),
                                                                              
                                                                              # Time series by age group
-                                                                             titlePanel(HTML("<br><h2>Time Series of Immunity, By Age Group</h3>")),
+                                                                             titlePanel(HTML("<br><h2>Time Series of Immunity, By Age Group</h2>")),
                                                                              fluidRow(
                                                                                  column(width=6, align="center",
                                                                                         titlePanel(HTML("<h3>Cumulative Vaccinations</h3>")),
                                                                                         radioButtons("totalVaxTSbyAgeType", "Display as:", inline=TRUE,
                                                                                                      c("Stacked Area Plot", "Line Plot")),
-                                                                                        plotlyOutput("totalVaxTSbyAge")
                                                                                  ),
                                                                                  column(width=6, align="center",
                                                                                         titlePanel(HTML("<h3>New Vaccinations</h3>")),
                                                                                         radioButtons("newVaxTSbyAgeType", "Display as:", inline=TRUE,
                                                                                                      c("Stacked Area Plot", "Line Plot"), selected="Line Plot"),
-                                                                                        plotlyOutput("newVaxTSbyAge")
+                                                                                 ),
+                                                                             ),
+                                                                             fluidRow(
+                                                                                 column(width=12, align="center",
+                                                                                        titlePanel(HTML("<h4>Full Vaccinations</h4>"))
+                                                                                 )
+                                                                             ),
+                                                                             fluidRow(
+                                                                                 column(width=6, align="center",
+                                                                                        plotlyOutput("totalFullVaxTSbyAge")
+                                                                                 ),
+                                                                                 column(width=6, align="center",
+                                                                                        plotlyOutput("newFullVaxTSbyAge")
+                                                                                 ),
+                                                                             ),
+                                                                             fluidRow(
+                                                                                 column(width=12, align="center",
+                                                                                        titlePanel(HTML("<h4>Partial Vaccinations</h4>"))
+                                                                                 )
+                                                                             ),
+                                                                             fluidRow(
+                                                                                 column(width=6, align="center",
+                                                                                        plotlyOutput("totalPartVaxTSbyAge")
+                                                                                 ),
+                                                                                 column(width=6, align="center",
+                                                                                        plotlyOutput("newPartVaxTSbyAge")
                                                                                  ),
                                                                              ),
                                                                              titlePanel(HTML("<h3>Active Post-Infection Immunity</h3>")),

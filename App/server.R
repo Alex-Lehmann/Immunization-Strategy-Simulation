@@ -4,6 +4,7 @@ library(shiny)
 casesColor = "#FFB000"
 deathsColor = "#DC267F"
 vaxColor = "#648FFF"
+partVaxColor = "#324880"
 
 ptolColors = c("#332288", "#117733", "#44AA99", "#88CCEE", "#DDCC77", "#CC6677", "#AA4499", "#882255")
 
@@ -52,14 +53,23 @@ shinyServer(function(input, output, session){
                          Deaths_70s = 0,
                          Deaths_Over80 = 0,
                          
-                         Vax_Under20 = 0,
-                         Vax_20s = 0,
-                         Vax_30s = 0,
-                         Vax_40s = 0,
-                         Vax_50s = 0,
-                         Vax_60s = 0,
-                         Vax_70s = 0,
-                         Vax_Over80 = 0,
+                         FullVax_Under20 = 0,
+                         FullVax_20s = 0,
+                         FullVax_30s = 0,
+                         FullVax_40s = 0,
+                         FullVax_50s = 0,
+                         FullVax_60s = 0,
+                         FullVax_70s = 0,
+                         FullVax_Over80 = 0,
+                         
+                         PartialVax_Under20 = 0,
+                         PartialVax_20s = 0,
+                         PartialVax_30s = 0,
+                         PartialVax_40s = 0,
+                         PartialVax_50s = 0,
+                         PartialVax_60s = 0,
+                         PartialVax_70s = 0,
+                         PartialVax_Over80 = 0,
                          
                          Active_Under20 = 0,
                          Active_20s = 0,
@@ -127,9 +137,10 @@ shinyServer(function(input, output, session){
                    `New Deaths` = c(NA, diff(`Total Deaths`))) %>%
             select(Iteration, Date, `Total Deaths`, `New Deaths`)
         values$overallVax = values$results %>%
-            mutate(`Total Vaccinations` = Vax_Under20 + Vax_20s + Vax_30s + Vax_40s + Vax_50s + Vax_60s + Vax_70s + Vax_Over80,
-                   `New Vaccinations` = c(NA, diff(`Total Vaccinations`))) %>%
-            select(Iteration, Date, `Total Vaccinations`, `New Vaccinations`)
+            mutate(`Total Fully Vaccinated` = rowSums(across(starts_with("FullVax"))),
+                   `New Fully Vaccinated` = c(NA, diff(`Total Fully Vaccinated`)),
+                   `Total Partially Vaccinated` = rowSums(across(starts_with("PartialVax"))),
+                   `New Partially Vaccinated` = c(NA, diff(`Total Partially Vaccinated`)))
         
         values$simCases = values$overallCases %>%
             slice_tail(n=1) %>%
@@ -139,7 +150,7 @@ shinyServer(function(input, output, session){
             pull(`Total Deaths`)
         values$simVax = values$overallVax %>%
             slice_tail(n=1) %>%
-            pull(`Total Vaccinations`)
+            pull(`Total Fully Vaccinated`)
         
         # Compute user-defined metric
         casesCoef = input$metricCases / 100
@@ -188,8 +199,7 @@ shinyServer(function(input, output, session){
             filter(!is.na(`Total Cases`)) %>%
             ggplot(aes(x=Date, y=`Total Cases`)) +
             geom_point(color=casesColor) +
-            geom_line(color=casesColor) +
-            ylab("Cumulative Cases")
+            geom_line(color=casesColor)
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
                    xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
@@ -202,8 +212,7 @@ shinyServer(function(input, output, session){
             filter(!is.na(`New Cases`)) %>%
             ggplot(aes(x=Date, y=`New Cases`)) +
             geom_point(color=casesColor) +
-            geom_line(color=casesColor) +
-            ylab("New Cases")
+            geom_line(color=casesColor)
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
                    xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
@@ -217,8 +226,7 @@ shinyServer(function(input, output, session){
             filter(!is.na(`Total Deaths`)) %>%
             ggplot(aes(x=Date, y=`Total Deaths`)) +
             geom_point(color=deathsColor) +
-            geom_line(color=deathsColor) +
-            ylab("Cumulative Deaths")
+            geom_line(color=deathsColor)
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
                    xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
@@ -231,8 +239,7 @@ shinyServer(function(input, output, session){
             filter(!is.na(`New Deaths`)) %>%
             ggplot(aes(x=Date, y=`New Deaths`)) +
             geom_point(color=deathsColor) +
-            geom_line(color=deathsColor) +
-            ylab("New Deaths")
+            geom_line(color=deathsColor)
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
                    xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
@@ -243,11 +250,10 @@ shinyServer(function(input, output, session){
     # Vaccinations time series
     output$summaryTotalVaxTS = renderPlotly({
         plot = values$overallVax %>%
-            filter(!is.na(`Total Vaccinations`)) %>%
-            ggplot(aes(x=Date, y=`Total Vaccinations`)) +
+            filter(!is.na(`Total Fully Vaccinated`)) %>%
+            ggplot(aes(x=Date, y=`Total Fully Vaccinated`)) +
             geom_point(color=vaxColor) +
-            geom_line(color=vaxColor) +
-            ylab("Cumulative Vaccinations")
+            geom_line(color=vaxColor)
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
                    xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
@@ -257,11 +263,10 @@ shinyServer(function(input, output, session){
     
     output$summaryNewVaxsTS = renderPlotly({
         plot = values$overallVax %>%
-            filter(!is.na(`New Vaccinations`)) %>%
-            ggplot(aes(x=Date, y=`New Vaccinations`)) +
+            filter(!is.na(`New Fully Vaccinated`)) %>%
+            ggplot(aes(x=Date, y=`New Fully Vaccinated`)) +
             geom_point(color=vaxColor) +
-            geom_line(color=vaxColor) +
-            ylab("New Vaccinations")
+            geom_line(color=vaxColor)
         ggplotly(plot) %>%
             layout(showlegend=TRUE, hovermode="x", spikedistance=-1,
                    xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
@@ -579,20 +584,14 @@ shinyServer(function(input, output, session){
         forStack = values$results %>%
             transmute(Date = Date,
                       `Post-Infection` = rowSums(across(starts_with("Immune"))),
-                      Vaccinated = rowSums(across(starts_with("Vax")))) %>%
-            pivot_longer(!Date, names_to="Immunity Type", values_to="Count")
-        
-        forLine = forStack %>%
-            group_by(Date) %>%
-            summarize(Total = sum(Count)) %>%
-            pull(Total)
+                      `Fully Vaccinated` = rowSums(across(starts_with("FullVax"))),
+                      `Partially Vaccinated` = rowSums(across(starts_with("PartialVax")))) %>%
+            pivot_longer(!Date, names_to="Immunity Type", values_to="Total Immune")
         
         plot = forStack %>%
-            mutate(`Total Immune` = rep(forLine, each=2)) %>%
-            ggplot(aes(x=Date)) +
-            geom_area(aes(y=Count, fill=`Immunity Type`), alpha=0.8) +
-            geom_line(aes(y=`Total Immune`), color="#ffffff", alpha=0) +
-            scale_fill_manual(values=c("Post-Infection"=casesColor, "Vaccinated"=vaxColor))
+            ggplot(aes(x=Date, y=`Total Immune`, fill=`Immunity Type`)) +
+            geom_area(alpha=0.8) +
+            scale_fill_manual(values=c("Post-Infection"=casesColor, "Fully Vaccinated"=vaxColor, "Partially Vaccinated"=partVaxColor))
         
         ggplotly(plot) %>%
             layout(legend=list(orientation="h", y=1.1),
@@ -606,15 +605,17 @@ shinyServer(function(input, output, session){
         
         plot = values$results %>%
             mutate(TotalNatural = rowSums(across(starts_with("Immune"))),
-                   TotalVax = rowSums(across(starts_with("Vax"))),
-                   TotalImmune = TotalNatural + TotalVax) %>%
+                   TotalFullVax = rowSums(across(starts_with("FullVax"))),
+                   TotalPartVax = rowSums(across(starts_with("PartialVax"))),
+                   TotalImmune = TotalNatural + TotalFullVax + TotalPartVax) %>%
             transmute(Date = Date,
                       `Post-Infection` = round(TotalNatural / TotalImmune, 4),
-                      Vaccinated = round(TotalVax / TotalImmune, 4)) %>%
+                      `Fully Vaccinated` = round(TotalFullVax / TotalImmune, 4),
+                      `Partially Vaccinated` = round(TotalPartVax / TotalImmune, 4)) %>%
             pivot_longer(!Date, names_to="Immunity Type", values_to="Proportion") %>%
             ggplot(aes(x=Date, y=Proportion, fill=`Immunity Type`)) +
             geom_area(alpha=0.8) +
-            scale_fill_manual(values=c("Post-Infection"=casesColor, "Vaccinated"=vaxColor))
+            scale_fill_manual(values=c("Post-Infection"=casesColor, "Fully Vaccinated"=vaxColor, "Partially Vaccinated"=partVaxColor))
         
         ggplotly(plot) %>%
             layout(legend=list(orientation="h", y=1.1),
@@ -624,10 +625,10 @@ shinyServer(function(input, output, session){
             config(displayModeBar = FALSE)
     })
     
-    output$totalVaxTSbyAge = renderPlotly({
+    output$totalFullVaxTSbyAge = renderPlotly({
         
         df = values$results %>%
-            select(Date, starts_with("Vax")) %>%
+            select(Date, starts_with("FullVax")) %>%
             pivot_longer(!Date, names_to="AgeGroup", values_to="Total Vaccinations") %>%
             mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
                    AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
@@ -653,10 +654,69 @@ shinyServer(function(input, output, session){
             config(displayModeBar = FALSE)
     })
     
-    output$newVaxTSbyAge = renderPlotly({
+    output$newFullVaxTSbyAge = renderPlotly({
         
         df = values$results %>%
-            select(Date, starts_with("Vax")) %>%
+            select(Date, starts_with("FullVax")) %>%
+            mutate(across(starts_with("Vax"), function(x){ c(NA, diff(x)) })) %>%
+            pivot_longer(!Date, names_to="AgeGroup", values_to="New Vaccinations") %>%
+            mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
+                   AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
+                   `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) # For legend order
+        
+        plot = NULL
+        if (input$newVaxTSbyAgeType == "Stacked Area Plot"){
+            plot = df %>%
+                ggplot(aes(x=Date, y=`New Vaccinations`, fill=`Age Group`)) +
+                geom_area() +
+                scale_fill_manual(values=ptolColors)
+        } else {
+            plot = df %>%
+                ggplot(aes(x=Date, y=`New Vaccinations`, color=`Age Group`)) +
+                geom_line() +
+                scale_color_manual(values=ptolColors)
+        }
+        
+        ggplotly(plot) %>%
+            layout(legend=list(orientation="h", y=1.2),
+                   xaxis=list(fixedrange=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
+    })
+    
+    output$totalPartVaxTSbyAge = renderPlotly({
+        
+        df = values$results %>%
+            select(Date, starts_with("PartialVax")) %>%
+            pivot_longer(!Date, names_to="AgeGroup", values_to="Total Vaccinations") %>%
+            mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
+                   AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
+                   `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) # For legend order
+        
+        plot = NULL
+        if (input$totalVaxTSbyAgeType == "Stacked Area Plot"){
+            plot = df %>%
+                ggplot(aes(x=Date, y=`Total Vaccinations`, fill=`Age Group`)) +
+                geom_area() +
+                scale_fill_manual(values=ptolColors)
+        } else {
+            plot = df %>%
+                ggplot(aes(x=Date, y=`Total Vaccinations`, color=`Age Group`)) +
+                geom_line() +
+                scale_color_manual(values=ptolColors)
+        }
+        
+        ggplotly(plot) %>%
+            layout(legend=list(orientation="h", y=1.2),
+                   xaxis=list(fixedrange=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
+    })
+    
+    output$newPartVaxTSbyAge = renderPlotly({
+        
+        df = values$results %>%
+            select(Date, starts_with("PartialVax")) %>%
             mutate(across(starts_with("Vax"), function(x){ c(NA, diff(x)) })) %>%
             pivot_longer(!Date, names_to="AgeGroup", values_to="New Vaccinations") %>%
             mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
