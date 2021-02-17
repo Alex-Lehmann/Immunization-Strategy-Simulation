@@ -5,6 +5,8 @@ casesColor = "#FFB000"
 deathsColor = "#DC267F"
 vaxColor = "#648FFF"
 
+ptolColors = c("#332288", "#117733", "#44AA99", "#88CCEE", "#DDCC77", "#CC6677", "#AA4499", "#882255")
+
 # Base constants
 baseCases = 568919
 baseDeaths = 21368
@@ -303,14 +305,25 @@ shinyServer(function(input, output, session){
     #######################################################################################
     # Epidemiological detail plots ########################################################
     output$activeCasesTSbyAge = renderPlotly({
-        plot = values$results %>%
+        df = values$results %>%
             select(Date, Active_Under20, Active_20s, Active_30s, Active_40s, Active_50s, Active_60s, Active_70s, Active_Over80) %>%
             rename(`Under 20` = Active_Under20, `20s` = Active_20s, `30s` = Active_30s, `40s` = Active_40s,
                    `50s` = Active_50s, `60s` = Active_60s, `70s` = Active_70s, `Over 80` = Active_Over80) %>%
             pivot_longer(!Date, names_to="AgeGroup", values_to="Active Cases") %>%
-            mutate(`Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) %>% # For legend order
-            ggplot(aes(x=Date, y=`Active Cases`, color=`Age Group`)) +
-            geom_line()
+            mutate(`Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) # For legend order
+        
+        plot = NULL
+        if (input$activeCasesTSbyAgeType == "Stacked Area Plot"){
+            plot = df %>%
+                ggplot(aes(x=Date, y=`Active Cases`, fill=`Age Group`)) +
+                geom_area() +
+                scale_fill_manual(values=ptolColors)
+        } else {
+            plot = df %>%
+                ggplot(aes(x=Date, y=`Active Cases`, color=`Age Group`)) +
+                geom_line() +
+                scale_color_manual(values=ptolColors)
+        }
         
         ggplotly(plot) %>%
             layout(legend=list(orientation="h", y=1.1),
@@ -320,13 +333,24 @@ shinyServer(function(input, output, session){
     })
     
     output$totalCasesTSbyAge = renderPlotly({
-        plot = values$results %>%
+        df = values$results %>%
             select(Date, Cases_Under20, Cases_20s, Cases_30s, Cases_40s, Cases_50s, Cases_60s, Cases_70s, Cases_Over80) %>%
             rename(`Under 20` = Cases_Under20, `20s` = Cases_20s, `30s` = Cases_30s, `40s` = Cases_40s, `50s` = Cases_50s, `60s` = Cases_60s, `70s` = Cases_70s, `Over 80` = Cases_Over80) %>%
             pivot_longer(!Date, names_to="AgeGroup", values_to="Total Cases") %>%
-            mutate(`Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) %>% # For legend order
-            ggplot(aes(x=Date, y=`Total Cases`, color=`Age Group`)) +
-            geom_line()
+            mutate(`Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) # For legend order
+        
+        plot = NULL
+        if (input$totalCasesTSbyAgeType == "Stacked Area Plot"){
+            plot = df %>%
+                ggplot(aes(x=Date, y=`Total Cases`, fill=`Age Group`)) +
+                geom_area() +
+                scale_fill_manual(values=ptolColors)
+        } else {
+            plot = df %>%
+                ggplot(aes(x=Date, y=`Total Cases`, color=`Age Group`)) +
+                geom_line() +
+                scale_color_manual(values=ptolColors)
+        }
         
         ggplotly(plot) %>%
             layout(legend=list(orientation="h", y=1.2),
@@ -336,15 +360,26 @@ shinyServer(function(input, output, session){
     })
     
     output$newCasesTSbyAge = renderPlotly({
-        plot = values$results %>%
+        df = values$results %>%
             select(Date, Cases_Under20, Cases_20s, Cases_30s, Cases_40s, Cases_50s, Cases_60s, Cases_70s, Cases_Over80) %>%
             mutate_at(vars(-Date), function(x){c(NA, diff(x))}) %>%
+            drop_na() %>%
             rename(`Under 20` = Cases_Under20, `20s` = Cases_20s, `30s` = Cases_30s, `40s` = Cases_40s, `50s` = Cases_50s, `60s` = Cases_60s, `70s` = Cases_70s, `Over 80` = Cases_Over80) %>%
             pivot_longer(!Date, names_to="AgeGroup", values_to="New Cases") %>%
-            mutate(`Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) %>% # For legend order
-            ggplot(aes(x=Date, y=`New Cases`, color=`Age Group`)) +
-            geom_line() +
-            ylab("New Cases")
+            mutate(`Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) # For legend order
+        
+        plot = NULL
+        if (input$newCasesTSbyAgeType == "Stacked Area Plot"){
+            plot = df %>%
+                ggplot(aes(x=Date, y=`New Cases`, fill=`Age Group`)) +
+                geom_area() +
+                scale_fill_manual(values=ptolColors)
+        } else {
+            plot = df %>%
+                ggplot(aes(x=Date, y=`New Cases`, color=`Age Group`)) +
+                geom_line() +
+                scale_color_manual(values=ptolColors)
+        }
         
         ggplotly(plot) %>%
             layout(legend=list(orientation="h", y=1.2),
@@ -400,14 +435,25 @@ shinyServer(function(input, output, session){
     # Case Severity #######################################################################
     
     output$totalDeathsTSbyAge = renderPlotly({
-        plot = values$results %>%
+        df = values$results %>%
             select(Date, starts_with("Deaths")) %>%
             pivot_longer(!Date, names_to="AgeGroup", values_to="Total Deaths") %>%
             mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
                    AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
-                   `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) %>% # For legend order
-            ggplot(aes(x=Date, y=`Total Deaths`, color=`Age Group`)) +
-            geom_line()
+                   `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) # For legend order
+        
+        plot = NULL
+        if (input$totalDeathsTSbyAgeType == "Stacked Area Plot"){
+            plot = df %>%
+                ggplot(aes(x=Date, y=`Total Deaths`, fill=`Age Group`)) +
+                geom_area() +
+                scale_fill_manual(values=ptolColors)
+        } else {
+            plot = df %>%
+                ggplot(aes(x=Date, y=`Total Deaths`, color=`Age Group`)) +
+                geom_line() +
+                scale_color_manual(values=ptolColors)
+        }
         
         ggplotly(plot) %>%
             layout(legend=list(orientation="h", y=1.2),
@@ -417,15 +463,27 @@ shinyServer(function(input, output, session){
     })
     
     output$newDeathsTSbyAge = renderPlotly({
-        plot = values$results %>%
+        df = values$results %>%
             select(Date, starts_with("Deaths")) %>%
             mutate(across(starts_with("Deaths"), function(x){ c(NA, diff(x)) })) %>%
+            drop_na() %>%
             pivot_longer(!Date, names_to="AgeGroup", values_to="New Deaths") %>%
             mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
                    AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
-                   `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) %>% # For legend order
-            ggplot(aes(x=Date, y=`New Deaths`, color=`Age Group`)) +
-            geom_line()
+                   `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) # For legend order
+        
+        plot = NULL
+        if (input$newDeathsTSbyAgeType == "Stacked Area Plot"){
+            plot = df %>%
+                ggplot(aes(x=Date, y=`New Deaths`, fill=`Age Group`)) +
+                geom_area() +
+                scale_fill_manual(values=ptolColors)
+        } else {
+            plot = df %>%
+                ggplot(aes(x=Date, y=`New Deaths`, color=`Age Group`)) +
+                geom_line() +
+                scale_color_manual(values=ptolColors)
+        }
         
         ggplotly(plot) %>%
             layout(legend=list(orientation="h", y=1.2),
@@ -566,16 +624,27 @@ shinyServer(function(input, output, session){
             config(displayModeBar = FALSE)
     })
     
-    output$totalVaxImmunityTS = renderPlotly({
+    output$totalVaxTSbyAge = renderPlotly({
         
-        plot = values$results %>%
+        df = values$results %>%
             select(Date, starts_with("Vax")) %>%
             pivot_longer(!Date, names_to="AgeGroup", values_to="Total Vaccinations") %>%
             mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
                    AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
-                   `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) %>% # For legend order
-            ggplot(aes(x=Date, y=`Total Vaccinations`, color=`Age Group`)) +
-            geom_line()
+                   `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) # For legend order
+        
+        plot = NULL
+        if (input$totalVaxTSbyAgeType == "Stacked Area Plot"){
+            plot = df %>%
+                ggplot(aes(x=Date, y=`Total Vaccinations`, fill=`Age Group`)) +
+                geom_area() +
+                scale_fill_manual(values=ptolColors)
+        } else {
+            plot = df %>%
+                ggplot(aes(x=Date, y=`Total Vaccinations`, color=`Age Group`)) +
+                geom_line() +
+                scale_color_manual(values=ptolColors)
+        }
             
         ggplotly(plot) %>%
             layout(legend=list(orientation="h", y=1.2),
@@ -584,17 +653,28 @@ shinyServer(function(input, output, session){
             config(displayModeBar = FALSE)
     })
     
-    output$newVaxImmunityTS = renderPlotly({
+    output$newVaxTSbyAge = renderPlotly({
         
-        plot = values$results %>%
+        df = values$results %>%
             select(Date, starts_with("Vax")) %>%
             mutate(across(starts_with("Vax"), function(x){ c(NA, diff(x)) })) %>%
             pivot_longer(!Date, names_to="AgeGroup", values_to="New Vaccinations") %>%
             mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
                    AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
-                   `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) %>% # For legend order
-            ggplot(aes(x=Date, y=`New Vaccinations`, color=`Age Group`)) +
-            geom_line()
+                   `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) # For legend order
+        
+        plot = NULL
+        if (input$newVaxTSbyAgeType == "Stacked Area Plot"){
+            plot = df %>%
+                ggplot(aes(x=Date, y=`New Vaccinations`, fill=`Age Group`)) +
+                geom_area() +
+                scale_fill_manual(values=ptolColors)
+        } else {
+            plot = df %>%
+                ggplot(aes(x=Date, y=`New Vaccinations`, color=`Age Group`)) +
+                geom_line() +
+                scale_color_manual(values=ptolColors)
+        }
         
         ggplotly(plot) %>%
             layout(legend=list(orientation="h", y=1.2),
@@ -603,16 +683,27 @@ shinyServer(function(input, output, session){
             config(displayModeBar = FALSE)
     })
     
-    output$activePiImmunityTS = renderPlotly({
+    output$activePIts = renderPlotly({
         
-        plot = values$results %>%
+        df = values$results %>%
             select(Date, starts_with("Immune")) %>%
             pivot_longer(!Date, names_to="AgeGroup", values_to="Total Post-Infection") %>%
             mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
                    AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
-                   `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) %>% # For legend order
-            ggplot(aes(x=Date, y=`Total Post-Infection`, color=`Age Group`)) +
-            geom_line()
+                   `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80")))
+        
+        plot = NULL
+        if (input$activePItsType == "Stacked Area Plot"){
+            plot = df %>%
+                ggplot(aes(x=Date, y=`Total Post-Infection`, fill=`Age Group`)) +
+                geom_area() +
+                scale_fill_manual(values=ptolColors)
+        } else {
+            plot = df %>%
+                ggplot(aes(x=Date, y=`Total Post-Infection`, color=`Age Group`)) +
+                geom_line() +
+                scale_color_manual(values=ptolColors)
+        }
         
         ggplotly(plot) %>%
             layout(legend=list(orientation="h", y=1.2),

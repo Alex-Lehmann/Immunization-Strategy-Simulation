@@ -1,7 +1,7 @@
 library(shiny)
 
 # Load packages
-packages = c("tidyverse", "lubridate", "shinybusy", "shinyWidgets", "plotly", "DT", "viridis")
+packages = c("tidyverse", "lubridate", "shinybusy", "shinyWidgets", "plotly")
 
 source("fn/loadPackages.R")
 loadPackages(packages)
@@ -184,15 +184,23 @@ shinyUI(fluidPage(
                                                                              
                                                                              # Time series by age group
                                                                              titlePanel(HTML("<h2>Time Series of Cases, By Age Group</h2>")),
+                                                                             
                                                                              titlePanel(HTML("<h3>Active Cases</h3>")),
+                                                                             radioButtons("activeCasesTSbyAgeType", "Display as:", inline=TRUE,
+                                                                                          c("Stacked Area Plot", "Line Plot")),
                                                                              plotlyOutput("activeCasesTSbyAge"),
+                                                                             
                                                                              fluidRow(
                                                                                  column(width=6, align="center",
                                                                                         titlePanel(HTML("<h3>Cumulative Cases</h3>")),
+                                                                                        radioButtons("totalCasesTSbyAgeType", "Display as:", inline=TRUE,
+                                                                                                     c("Stacked Area Plot", "Line Plot")),
                                                                                         plotlyOutput("totalCasesTSbyAge")
                                                                                  ),
                                                                                  column(width=6, align="center",
                                                                                         titlePanel(HTML("<h3>New Cases</h3>")),
+                                                                                        radioButtons("newCasesTSbyAgeType", "Display as:", inline=TRUE,
+                                                                                                     c("Stacked Area Plot", "Line Plot"), selected="Line Plot"),
                                                                                         plotlyOutput("newCasesTSbyAge")
                                                                                  )
                                                                              ),
@@ -218,10 +226,14 @@ shinyUI(fluidPage(
                                                                              fluidRow(
                                                                                  column(width=6, align="center",
                                                                                         titlePanel(HTML("<h3>Cumulative Deaths</h3>")),
+                                                                                        radioButtons("totalDeathsTSbyAgeType", "Display as:", inline=TRUE,
+                                                                                                     c("Stacked Area Plot", "Line Plot")),
                                                                                         plotlyOutput("totalDeathsTSbyAge")
                                                                                  ),
                                                                                  column(width=6, align="center",
                                                                                         titlePanel(HTML("<h3>New Deaths</h3>")),
+                                                                                        radioButtons("newDeathsTSbyAgeType", "Display as:", inline=TRUE,
+                                                                                                     c("Stacked Area Plot", "Line Plot"), selected="Line Plot"),
                                                                                         plotlyOutput("newDeathsTSbyAge")
                                                                                  )
                                                                              ),
@@ -258,15 +270,21 @@ shinyUI(fluidPage(
                                                                              fluidRow(
                                                                                  column(width=6, align="center",
                                                                                         titlePanel(HTML("<h3>Cumulative Vaccinations</h3>")),
-                                                                                        plotlyOutput("totalVaxImmunityTS")
+                                                                                        radioButtons("totalVaxTSbyAgeType", "Display as:", inline=TRUE,
+                                                                                                     c("Stacked Area Plot", "Line Plot")),
+                                                                                        plotlyOutput("totalVaxTSbyAge")
                                                                                  ),
                                                                                  column(width=6, align="center",
                                                                                         titlePanel(HTML("<h3>New Vaccinations</h3>")),
-                                                                                        plotlyOutput("newVaxImmunityTS")
+                                                                                        radioButtons("newVaxTSbyAgeType", "Display as:", inline=TRUE,
+                                                                                                     c("Stacked Area Plot", "Line Plot"), selected="Line Plot"),
+                                                                                        plotlyOutput("newVaxTSbyAge")
                                                                                  ),
                                                                              ),
                                                                              titlePanel(HTML("<h3>Active Post-Infection Immunity</h3>")),
-                                                                             plotlyOutput("activePiImmunityTS")
+                                                                             radioButtons("activePItsType", "Display as:", inline=TRUE,
+                                                                                          c("Stacked Area Plot", "Line Plot")),
+                                                                             plotlyOutput("activePIts")
                                                                     )
                                                         )
                                                     ),
