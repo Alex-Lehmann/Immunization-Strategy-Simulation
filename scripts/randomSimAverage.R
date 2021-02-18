@@ -1,33 +1,73 @@
-setwd("App")
+# Quick script to get average results of a simulation with no vaccinations for reference
+# purposes
 
 library(tidyverse)
 library(lubridate)
+library(snow)
 source("fn/sim.R")
 
-nSims = 10000
-overallResults = tibble(`Total Cases`=0, `Total Deaths`=0, `Total Vaccinations`=0)
+# Initalize computing cluster
+nCores = 10
+c1 = makeCluster(nCores, "SOCK")
 
-# Run simulation nSims times
-for (i in 1:nSims){
-  print(paste0("Simulation #", i))
+# Function to run simulations
+runSim = function(nSims){
+  library(tidyverse)
+  library(lubridate)
+  source("fn/sim.R")
   
-  agents = sim_make_agents(scaleFactor=100)
-  simResults = tibble(Iteration = 0,
-                      `Total Cases` = 0,
-                      `Total Deaths` = 0,
-                      `Total Vaccinations` = 0)
-  for (j in 1:39){
-    agents = sim_iter(0, agents, 100)
-    simResults = rbind(simResults, sim_results(agents, j, 100))
+  overallResults = NULL
+  for (i in 1:nSims){
+    
+    agents = sim_make_agents(scaleFactor=100)
+    simResults = tibble(Iteration = 0,
+                        Cases_Under20 = 0,
+                        Cases_20s = 0,
+                        Cases_30s = 0,
+                        Cases_40s = 0,
+                        Cases_50s = 0,
+                        Cases_60s = 0,
+                        Cases_70s = 0,
+                        Cases_Over80 = 0,
+                        
+                        Deaths_Under20 = 0,
+                        Deaths_20s = 0,
+                        Deaths_30s = 0,
+                        Deaths_40s = 0,
+                        Deaths_50s = 0,
+                        Deaths_60s = 0,
+                        Deaths_70s = 0,
+                        Deaths_Over80 = 0)
+    
+    for (j in 1:39){
+      agents = sim_iter(0, 0, 0, "One Dose", agents, 100)
+      simResults = sim_results(agents, simResults, j, 100)
+    }
+    
+    summaryResults = transmute(simResults,
+                               Iteration = Iteration,
+                               Cases = rowSums(across(starts_with("Cases"))),
+                               Deaths = rowSums(across(starts_with("Deaths"))))
+    
+    overallResults = rbind(overallResults, summaryResults)
   }
   
-  simEnd = slice_tail(simResults, n=1)
-  simCases = simEnd$`Total Cases`
-  simDeaths = simEnd$`Total Deaths`
-  simVax = simEnd$`Total Vaccinations`
-  
-  overallResults = rbind(overallResults, c(simCases, simDeaths, simVax))
+  return(overallResults)
 }
 
-averageValue = overallResults %>%
-  summarize(AvgCases = mean(`Total Cases`), AvgDeaths = mean(`Total Deaths`), AvgVax = mean(`Total Vaccinations`))
+# Run simulations
+clusterResults = bind_rows(clusterCall(c1, runSim, nSims=2)) %>%
+  mutate(Date = as_date("2021-01-01") + (7*Iteration))
+
+# Close cluster
+stopCluster(c1)
+
+# Save CSV files for cases and deaths
+clusterResults %>%
+  select(Date, Cases) %>%
+  rename(Reference = Cases) %>%
+  write.csv("ref/data/refCases.csv", row.names=FALSE)
+clusterResults %>%
+  select(Date, Deaths) %>%
+  rename(Reference = Deaths) %>%
+  write.csv("ref/data/refDeaths.csv", row.names=FALSE)

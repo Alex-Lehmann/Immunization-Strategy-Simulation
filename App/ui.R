@@ -174,11 +174,13 @@ shinyUI(fluidPage(
                                                                                                       fluidRow(
                                                                                                           column(width=6, align="center",
                                                                                                                  HTML("<h2>Case Mitigation</h2>"),
-                                                                                                                 htmlOutput("summaryMetricCases")
+                                                                                                                 htmlOutput("summaryMetricCases"),
+                                                                                                                 plotOutput("summaryCasesComparison")
                                                                                                           ),
                                                                                                           column(width=6, align="center",
                                                                                                                  HTML("<h2>Mortality Mitigation</h2>"),
-                                                                                                                 htmlOutput("summaryMetricDeaths")
+                                                                                                                 htmlOutput("summaryMetricDeaths"),
+                                                                                                                 plotOutput("summaryDeathsComparison")
                                                                                                           )
                                                                                                       )
                                                                                          )
@@ -360,7 +362,7 @@ shinyUI(fluidPage(
                                                                    
                                                                    # Number of doses input
                                                                    numericInput("paramVax", "Vaccine Doses Per Week",
-                                                                                value=82800, step=100),
+                                                                                value=165000, step=100),
                                                                    
                                                                    # Efficacy inputs
                                                                    sliderInput("paramFullEff", "Full Efficacy", ticks=FALSE, post="%",

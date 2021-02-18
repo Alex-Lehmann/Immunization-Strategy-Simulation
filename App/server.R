@@ -9,8 +9,17 @@ partVaxColor = "#324880"
 ptolColors = c("#332288", "#117733", "#44AA99", "#88CCEE", "#DDCC77", "#CC6677", "#AA4499", "#882255")
 
 # Base constants
-baseCases = 568919
-baseDeaths = 21368
+refCases = read_csv("ref/data/refCases.csv", col_types=cols())
+baseCases = refCases %>%
+    filter(Date == as_date("2021-10-01")) %>%
+    summarize(Cases = mean(Reference)) %>%
+    pull(Cases)
+
+refDeaths = read_csv("ref/data/refDeaths.csv", col_types=cols())
+baseDeaths = refDeaths %>%
+    filter(Date == as_date("2021-10-01")) %>%
+    summarize(Deaths = mean(Reference)) %>%
+    pull(Deaths)
 
 shinyServer(function(input, output, session){
     
@@ -318,6 +327,19 @@ shinyServer(function(input, output, session){
         )
     })
     
+    output$summaryCasesComparison = renderPlot({
+        plot = full_join(refCases, values$overallCases, by="Date") %>%
+            select(Date, Reference, `Total Cases`) %>%
+            rename(Simulation = `Total Cases`) %>%
+            pivot_longer(!Date, names_to="Data", values_to="Total Cases") %>%
+            ggplot(aes(x=Date, y=`Total Cases`, color=Data, linetype=Data)) +
+            geom_smooth(method="loess", formula="y~x") +
+            scale_color_manual(values=c("#000000", casesColor)) +
+            scale_linetype_manual(values=c("dotted", "solid")) +
+            theme(legend.position="top")
+        plot
+    })
+    
     output$summaryMetricDeaths = renderUI({
         fluidRow(
             column(width=6, align="right",
@@ -332,6 +354,19 @@ shinyServer(function(input, output, session){
                                format(round(100*values$deathsReduction, 2), big.mark=","), "%</h4>"))
             )
         )
+    })
+    
+    output$summaryDeathsComparison = renderPlot({
+        plot = full_join(refDeaths, values$overallDeaths, by="Date") %>%
+            select(Date, Reference, `Total Deaths`) %>%
+            rename(Simulation = `Total Deaths`) %>%
+            pivot_longer(!Date, names_to="Data", values_to="Total Deaths") %>%
+            ggplot(aes(x=Date, y=`Total Deaths`, color=Data, linetype=Data)) +
+            geom_smooth(method="loess", formula="y~x") +
+            scale_color_manual(values=c("#000000", deathsColor)) +
+            scale_linetype_manual(values=c("dotted", "solid")) +
+            theme(legend.position="top")
+        plot
     })
     
     #######################################################################################
