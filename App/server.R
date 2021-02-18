@@ -685,7 +685,7 @@ shinyServer(function(input, output, session){
         
         df = values$results %>%
             select(Date, starts_with("FullVax")) %>%
-            mutate(across(starts_with("Vax"), function(x){ c(NA, diff(x)) })) %>%
+            mutate(across(starts_with("FullVax"), function(x){ c(NA, diff(x)) })) %>%
             pivot_longer(!Date, names_to="AgeGroup", values_to="New Vaccinations") %>%
             mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
                    AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
@@ -744,7 +744,7 @@ shinyServer(function(input, output, session){
         
         df = values$results %>%
             select(Date, starts_with("PartialVax")) %>%
-            mutate(across(starts_with("Vax"), function(x){ c(NA, diff(x)) })) %>%
+            mutate(across(starts_with("FullVax"), function(x){ c(NA, diff(x)) })) %>%
             pivot_longer(!Date, names_to="AgeGroup", values_to="New Vaccinations") %>%
             mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
                    AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
