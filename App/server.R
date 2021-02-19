@@ -105,6 +105,8 @@ shinyServer(function(input, output, session){
         # Generate agents and record active cases
         print("Generating agents")
         agents = sim_make_agents(input$paramStrategy, input$paramScaling)
+        
+        # Initial state
         results = mutate(results,
                          Active_Under20 = sim_activeByAge(agents, "under20")*input$paramScaling,
                          Active_20s = sim_activeByAge(agents, "20s")*input$paramScaling,

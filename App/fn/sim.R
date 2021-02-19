@@ -152,96 +152,25 @@ sim_iter = function(doses, vaxEff, vaxPartialEff, strategy, simState, scaleFacto
 sim_results = function(state, results, iter, scaleFactor=1){
   
   # Get current totals per age group from simulation state
-  cases = c(sim_casesByAge(state, "under20"),
-            sim_casesByAge(state, "20s"),
-            sim_casesByAge(state, "30s"),
-            sim_casesByAge(state, "40s"),
-            sim_casesByAge(state, "50s"),
-            sim_casesByAge(state, "60s"),
-            sim_casesByAge(state, "70s"),
-            sim_casesByAge(state, "over80")) * scaleFactor
-  
-  deaths = c(sim_deathsByAge(state, "under20"),
-             sim_deathsByAge(state, "20s"),
-             sim_deathsByAge(state, "30s"),
-             sim_deathsByAge(state, "40s"),
-             sim_deathsByAge(state, "50s"),
-             sim_deathsByAge(state, "60s"),
-             sim_deathsByAge(state, "70s"),
-             sim_deathsByAge(state, "over80")) * scaleFactor
-  
-  fullVax = c(sim_fullVaxByAge(state, "under20"),
-              sim_fullVaxByAge(state, "20s"),
-              sim_fullVaxByAge(state, "30s"),
-              sim_fullVaxByAge(state, "40s"),
-              sim_fullVaxByAge(state, "50s"),
-              sim_fullVaxByAge(state, "60s"),
-              sim_fullVaxByAge(state, "70s"),
-              sim_fullVaxByAge(state, "over80")) * scaleFactor
-  
-  partialVax = c(sim_partialVaxByAge(state, "under20"),
-                 sim_partialVaxByAge(state, "20s"),
-                 sim_partialVaxByAge(state, "30s"),
-                 sim_partialVaxByAge(state, "40s"),
-                 sim_partialVaxByAge(state, "50s"),
-                 sim_partialVaxByAge(state, "60s"),
-                 sim_partialVaxByAge(state, "70s"),
-                 sim_partialVaxByAge(state, "over80")) * scaleFactor
-  
-  active = c(sim_activeByAge(state, "under20"),
-             sim_activeByAge(state, "20s"),
-             sim_activeByAge(state, "30s"),
-             sim_activeByAge(state, "40s"),
-             sim_activeByAge(state, "50s"),
-             sim_activeByAge(state, "60s"),
-             sim_activeByAge(state, "70s"),
-             sim_activeByAge(state, "over80")) * scaleFactor
-  
-  immune = c(sim_immuneByAge(state, "under20"),
-             sim_immuneByAge(state, "20s"),
-             sim_immuneByAge(state, "30s"),
-             sim_immuneByAge(state, "40s"),
-             sim_immuneByAge(state, "50s"),
-             sim_immuneByAge(state, "60s"),
-             sim_immuneByAge(state, "70s"),
-             sim_immuneByAge(state, "over80")) * scaleFactor
+  iterResults = state %>%
+    group_by(AgeGroup) %>%
+    summarize(Cases = sum(Infections),
+              Deaths = sum(State == -2),
+              FullVax = sum(Vax == 6),
+              PartVax = sum(Vax %in% 1:5),
+              Active = sum(State %in% c(25, 26)),
+              Immune = sum(State %in% 1:24),
+              .groups="drop") %>%
+    arrange(factor(AgeGroup, levels=c("under20", "20s", "30s", "40s", "50s", "60s", "70s", "over80")))
+  newTotals = c(iterResults$Cases, iterResults$Deaths, iterResults$FullVax, iterResults$PartVax, iterResults$Active, iterResults$Immune) * scaleFactor
   
   # Update simulation results
-  results = rbind(results, c(iter, cases, deaths, fullVax, partialVax, active, immune))
-  
+  results = rbind(results, c(iter, newTotals))
   return(results)
 }
 
 ###########################################################################################
 # Results helper functions ################################################################
-sim_casesByAge = function(state, ages){
-  state %>%
-    filter(AgeGroup == ages) %>%
-    summarize(Cases = sum(Infections)) %>%
-    pull(Cases)
-}
-
-sim_deathsByAge = function(state, ages){
-  state %>%
-    filter(AgeGroup == ages) %>%
-    summarize(Deaths = sum(State == -2)) %>%
-    pull(Deaths)
-}
-
-sim_fullVaxByAge = function(state, ages){
-  state %>%
-    filter(AgeGroup == ages) %>%
-    summarize(Vax = sum(Vax == 6)) %>%
-    pull(Vax)
-}
-
-sim_partialVaxByAge = function(state, ages){
-  state %>%
-    filter(AgeGroup == ages) %>%
-    summarize(Vax = sum(Vax %in% 1:5)) %>%
-    pull(Vax)
-}
-
 sim_activeByAge = function(state, ages){
   state %>%
     filter(AgeGroup == ages) %>%
