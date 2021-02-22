@@ -65,7 +65,8 @@ sim_make_agents = function(strategy="random", scaleFactor=1){
   
   # Determine priority order
   switch(strategy,
-    risk = {agents = arrange(agents, desc(row_number()))},
+    ageDesc = {agents = arrange(agents, desc(row_number()))},
+    ageAsc = {agents = arrange(agents, row_number())},
     random = {agents = slice_sample(agents, n=totalAgents)}
   )
   agents$Ticket = 1:totalAgents

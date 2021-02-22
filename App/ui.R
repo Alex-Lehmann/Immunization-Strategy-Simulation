@@ -371,7 +371,8 @@ shinyUI(fluidPage(
                                                                    
                                                                    # Preset strategy input
                                                                    selectInput("paramStrategy", "Presets",
-                                                                               list("Highest-Risk First" = "risk",
+                                                                               list("Age (Oldest First)" = "ageDesc",
+                                                                                    "Age (Youngest First)" = "ageAsc",
                                                                                     "Random" = "random")),
                                                                    
                                                                    # Dosage selection
