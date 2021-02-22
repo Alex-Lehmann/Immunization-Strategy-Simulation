@@ -313,10 +313,56 @@ shinyServer(function(input, output, session){
     })
     
     # User-defined metric summary
+    output$summaryMetricOverall = renderUI({
+        fluidRow(
+            column(width=6, align="right",
+                   HTML("<h4><b>Case Mitigation Weight:<br>
+                        Mortality Mitigation Weight:<br>
+                        Overall Strategy Effectiveness:</b></h4>")
+            ),
+            column(width=6, align="left",
+                   HTML(paste0("<h4>",
+                               round(isolate(input$metricCases)), "%<br>",
+                               round(isolate(input$metricDeaths)), "%<br>",
+                               format(round(values$userMetric, 2)), "%</h4>"))
+            )
+        )
+    })
+    
+    output$summaryMetricTotal = renderPlotly({
+        
+        # Compute user-defined metric for reference
+        refData = tibble(Date = refCases$Date,
+                         Cases = refCases$Reference * isolate({input$metricCases / 100}),
+                         Deaths = refDeaths$Reference * isolate({input$metricDeaths / 100})) %>%
+            transmute(Date = Date,
+                      Reference = Cases + Deaths)
+        
+        # Compute user-defined metric for simulation
+        simData = inner_join(values$overallCases, values$overallDeaths, by="Date") %>%
+            mutate(`Total Cases` = `Total Cases` * isolate({input$metricCases / 100}),
+                   `Total Deaths` = `Total Deaths` * isolate({input$metricDeaths / 100})) %>%
+            transmute(Date = Date,
+                      Simulation = `Total Cases` + `Total Deaths`)
+        
+        plot = full_join(refData, simData, by="Date") %>%
+            pivot_longer(!Date, names_to="Data", values_to="Metric Value") %>%
+            ggplot(aes(x=Date, y=`Metric Value`, color=Data, linetype=Data)) +
+            geom_line() +
+            scale_color_manual(values=c("#000000", vaxColor)) +
+            scale_linetype_manual(values=c("dotted", "solid"))
+        ggplotly(plot) %>%
+            layout(legend=list(orientation="h", y=1.1),
+                   showlegend=TRUE, hovermode="x", spikedistance=-1,
+                   xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
+    })
+    
     output$summaryMetricCases = renderUI({
         fluidRow(
             column(width=6, align="right",
-                   HTML("<h4><b>Expected Without Vaccine:<br>
+                   HTML("<h4><b>Cases Expected Without Vaccine:<br>
                         Simulation Result:<br>
                         Percent Improvement:</b></h4>")
             ),
@@ -329,23 +375,28 @@ shinyServer(function(input, output, session){
         )
     })
     
-    output$summaryCasesComparison = renderPlot({
+    output$summaryCasesComparison = renderPlotly({
         plot = full_join(refCases, values$overallCases, by="Date") %>%
             select(Date, Reference, `Total Cases`) %>%
             rename(Simulation = `Total Cases`) %>%
             pivot_longer(!Date, names_to="Data", values_to="Total Cases") %>%
             ggplot(aes(x=Date, y=`Total Cases`, color=Data, linetype=Data)) +
-            geom_smooth(method="loess", formula="y~x") +
+            geom_line() +
             scale_color_manual(values=c("#000000", casesColor)) +
             scale_linetype_manual(values=c("dotted", "solid")) +
             theme(legend.position="top")
-        plot
+        ggplotly(plot) %>%
+            layout(legend=list(orientation="h", y=1.1),
+                   showlegend=TRUE, hovermode="x", spikedistance=-1,
+                   xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
     })
     
     output$summaryMetricDeaths = renderUI({
         fluidRow(
             column(width=6, align="right",
-                   HTML("<h4><b>Expected Without Vaccine:<br>
+                   HTML("<h4><b>Deaths Expected Without Vaccine:<br>
                         Simulation Result:<br>
                         Percent Improvement:</b></h4>")
             ),
@@ -358,17 +409,22 @@ shinyServer(function(input, output, session){
         )
     })
     
-    output$summaryDeathsComparison = renderPlot({
+    output$summaryDeathsComparison = renderPlotly({
         plot = full_join(refDeaths, values$overallDeaths, by="Date") %>%
             select(Date, Reference, `Total Deaths`) %>%
             rename(Simulation = `Total Deaths`) %>%
             pivot_longer(!Date, names_to="Data", values_to="Total Deaths") %>%
             ggplot(aes(x=Date, y=`Total Deaths`, color=Data, linetype=Data)) +
-            geom_smooth(method="loess", formula="y~x") +
+            geom_line() +
             scale_color_manual(values=c("#000000", deathsColor)) +
             scale_linetype_manual(values=c("dotted", "solid")) +
             theme(legend.position="top")
-        plot
+        ggplotly(plot) %>%
+            layout(legend=list(orientation="h", y=1.1),
+                   showlegend=TRUE, hovermode="x", spikedistance=-1,
+                   xaxis=list(fixedrange=TRUE, showspikes=TRUE, spikemode="across", spikesnap="cursor", spikedash="solid", showline=TRUE, showgrid=TRUE),
+                   yaxis=list(fixedrange=TRUE)) %>%
+            config(displayModeBar = FALSE)
     })
     
     #######################################################################################

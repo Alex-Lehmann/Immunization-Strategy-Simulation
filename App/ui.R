@@ -78,7 +78,7 @@ shinyUI(fluidPage(
                                                                                                       <p>This parameter allows users to increase the speed of the simulation procedure at the expense of some accuracy. Increase this value to decrease computation time.<br>")
                                                                                     ),
                                                                                     tabPanelBody(NULL, value="metric",
-                                                                                                 HTML("<h3>Strategy Effectiveness</h3>
+                                                                                                 HTML("<h3>Evaluation Priorities</h3>
                                                                                                       <h4>Reduce Cases</h4>
                                                                                                       <p>This parameter determines the amount of weight given to reducing the total number of cases when comparing the currently-selected strategy against no vaccinations. Increasing this value causes the metric to favour a reduction in cases rather than a reduction in deaths.<br>
                                                                                                       <h4>Reduce Deaths</h4>
@@ -170,19 +170,21 @@ shinyUI(fluidPage(
                                                                                          ),
                                                                                          tabPanelBody(NULL, value="metric",
                                                                                                       titlePanel(HTML("<b>Strategy Effectiveness Summary</b>")),
-                                                                                                      HTML("<br>"),
                                                                                                       fluidRow(
                                                                                                           column(width=6, align="center",
                                                                                                                  HTML("<h2>Case Mitigation</h2>"),
                                                                                                                  htmlOutput("summaryMetricCases"),
-                                                                                                                 plotOutput("summaryCasesComparison")
+                                                                                                                 plotlyOutput("summaryCasesComparison")
                                                                                                           ),
                                                                                                           column(width=6, align="center",
                                                                                                                  HTML("<h2>Mortality Mitigation</h2>"),
                                                                                                                  htmlOutput("summaryMetricDeaths"),
-                                                                                                                 plotOutput("summaryDeathsComparison")
+                                                                                                                 plotlyOutput("summaryDeathsComparison")
                                                                                                           )
-                                                                                                      )
+                                                                                                      ),
+                                                                                                      HTML("<h2>Overall Strategy Effectiveness</h2>"),
+                                                                                                      htmlOutput("summaryMetricOverall"),
+                                                                                                      plotlyOutput("summaryMetricTotal"),
                                                                                          )
                                                                              )
                                                                     ),
@@ -327,27 +329,6 @@ shinyUI(fluidPage(
                                                         
                                                         fluidRow(
                                                             
-                                                            # User-defined metric
-                                                            column(width=3,
-                                                                   fluidRow(
-                                                                      column(width=10,
-                                                                             helpText(HTML("<h4>Strategic Priorities</h4"))
-                                                                      ),
-                                                                      column(width=2, align="right",
-                                                                             actionButton("metricHelpBn", NULL, icon("question"),
-                                                                                          style="border-radius:100%")
-                                                                      )
-                                                                   ),
-                                                                   
-                                                                   # Cases emphasis slider
-                                                                   sliderInput("metricCases", "Reduce Cases", ticks=FALSE, post="%",
-                                                                               min=0, max=100, value=50),
-                                                                   
-                                                                   # Deaths emphasis slider
-                                                                   sliderInput("metricDeaths", "Reduce Deaths", ticks=FALSE, post="%",
-                                                                               min=0, max=100, value=50)
-                                                            ),
-                                                            
                                                             # Vaccine efficacy settings
                                                             column(width=3,
                                                                    fluidRow(
@@ -391,6 +372,27 @@ shinyUI(fluidPage(
                                                                    # Dosage selection
                                                                    radioButtons("paramDoses", "Number of Doses Per Patient", inline=TRUE,
                                                                                 c("Two Doses", "One Dose"))
+                                                            ),
+                                                            
+                                                            # User-defined metric
+                                                            column(width=3,
+                                                                   fluidRow(
+                                                                       column(width=10,
+                                                                              helpText(HTML("<h4>Evaluation Priorities</h4"))
+                                                                       ),
+                                                                       column(width=2, align="right",
+                                                                              actionButton("metricHelpBn", NULL, icon("question"),
+                                                                                           style="border-radius:100%")
+                                                                       )
+                                                                   ),
+                                                                   
+                                                                   # Cases emphasis slider
+                                                                   sliderInput("metricCases", "Reduce Cases", ticks=FALSE, post="%",
+                                                                               min=0, max=100, value=50),
+                                                                   
+                                                                   # Deaths emphasis slider
+                                                                   sliderInput("metricDeaths", "Reduce Deaths", ticks=FALSE, post="%",
+                                                                               min=0, max=100, value=50)
                                                             ),
                                                             
                                                             # Simulation settings

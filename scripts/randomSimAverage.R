@@ -40,6 +40,7 @@ runSim = function(nSims){
                         Deaths_Over80 = 0)
     
     for (j in 1:39){
+      print(paste0("Simulation #", i, ", iteration #", j))
       agents = sim_iter(0, 0, 0, "One Dose", agents, 100)
       simResults = sim_results(agents, simResults, j, 100)
     }
@@ -56,7 +57,7 @@ runSim = function(nSims){
 }
 
 # Run simulations
-clusterResults = bind_rows(clusterCall(c1, runSim, nSims=2)) %>%
+clusterResults = bind_rows(clusterCall(c1, runSim, nSims=10)) %>%
   mutate(Date = as_date("2021-01-01") + (7*Iteration))
 
 # Close cluster
@@ -65,9 +66,11 @@ stopCluster(c1)
 # Save CSV files for cases and deaths
 clusterResults %>%
   select(Date, Cases) %>%
-  rename(Reference = Cases) %>%
+  group_by(Date) %>%
+  summarize(Reference = mean(Cases)) %>%
   write.csv("ref/data/refCases.csv", row.names=FALSE)
 clusterResults %>%
   select(Date, Deaths) %>%
-  rename(Reference = Deaths) %>%
+  group_by(Date) %>%
+  summarize(Reference = mean(Deaths)) %>%
   write.csv("ref/data/refDeaths.csv", row.names=FALSE)
