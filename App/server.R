@@ -336,26 +336,31 @@ shinyServer(function(input, output, session){
     
     output$summaryMetricTotal = renderPlotly({
         
-        # Compute user-defined metric for reference
-        refData = tibble(Date = refCases$Date,
-                         Cases = refCases$Reference * (values$metricCases / 100),
-                         Deaths = refDeaths$Reference * values$metricDeaths / 100) %>%
+        # Compute percent improvements for cases and deaths over time
+        casePercent = full_join(refCases, values$overallCases, by="Date") %>%
             transmute(Date = Date,
-                      Reference = Cases + Deaths)
-        
-        # Compute user-defined metric for simulation
-        simData = inner_join(values$overallCases, values$overallDeaths, by="Date") %>%
-            mutate(`Total Cases` = `Total Cases` * (values$metricCases / 100),
-                   `Total Deaths` = `Total Deaths` * (values$metricDeaths / 100)) %>%
+                      `Case Mitigation` = -(`Total Cases` - Reference) / Reference)
+        deathPercent = full_join(refDeaths, values$overallDeaths, by="Date") %>%
             transmute(Date = Date,
-                      Simulation = `Total Cases` + `Total Deaths`)
+                      `Mortality Mitigation` = -(`Total Deaths` - Reference) / Reference)
         
-        plot = full_join(refData, simData, by="Date") %>%
-            pivot_longer(!Date, names_to="Data", values_to="Metric Value") %>%
-            ggplot(aes(x=Date, y=`Metric Value`, color=Data, linetype=Data)) +
+        # Compute user metric over time
+        userMetric = full_join(casePercent, deathPercent, by="Date") %>%
+            drop_na() %>%
+            mutate(Overall = (values$metricCases*`Case Mitigation`) + (values$metricDeaths*`Mortality Mitigation`),
+                   `Case Mitigation` = 100 * `Case Mitigation`,
+                   `Mortality Mitigation` = 100 * `Mortality Mitigation`,
+                   Reference = rep(0, 39)) %>%
+            pivot_longer(!Date, names_to="Metric", values_to="Percent Change")
+        
+        # Plot
+        plot = userMetric %>%
+            ggplot(aes(x=Date, y=`Percent Change`, color=Metric, linetype=Metric)) +
             geom_line() +
-            scale_color_manual(values=c("#000000", vaxColor)) +
-            scale_linetype_manual(values=c("dotted", "solid"))
+            scale_color_manual(values=c(casesColor, deathsColor, vaxColor, "#000000")) +
+            scale_linetype_manual(values=c("solid", "solid", "solid", "dotted")) +
+            ylim(-100, 100)
+           
         ggplotly(plot) %>%
             layout(legend=list(orientation="h", y=1.1),
                    showlegend=TRUE, hovermode="x", spikedistance=-1,
