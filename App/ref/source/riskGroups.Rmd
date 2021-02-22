@@ -44,5 +44,30 @@ ggplot(groups, aes(x=`Age Group`, y=Population)) +
 kable(groups)
 ```
 
+```{r infection_groups, include=FALSE}
+# Get number of cases in each age group
+infectByGroup = read_csv("../data/conposcovidloc.csv") %>%
+  mutate(`Age Group` = ifelse(Age_Group %in% c("80s", "90s"), "80+", Age_Group)) %>%
+  filter(!is.na(`Age Group`), `Age Group` != "UNKNOWN") %>%
+  group_by(`Age Group`) %>%
+  summarize(Cases = n())
+
+# Compute proportion of total cases in each age group
+totalCases = sum(infectByGroup$Cases)
+infectByGroup = mutate(infectByGroup, Proportion = paste0(format(100*Cases / totalCases, digits=3), "%"))
+```
+
+We also considered the possibility that each age group might be at different risk levels of contracting COVID-19. We considered the proportion of confirmed COVID-19 cases in each age group, seen below.
+
+```{r infection_plot, echo=FALSE}
+infectByGroup %>%
+  ggplot(aes(x=`Age Group`, y=Cases, label=Proportion)) +
+  geom_bar(stat="identity") +
+  geom_text(vjust=-0.5) +
+  ggtitle("Ontario COVID-19 Cases by Age Group, with Proportion of Total")
+```
+
+We clearly see that some age groups contain a far greater proportion of COVID-19 cases than others. We account for this in our model by weighting new COVID-19 cases more heavily toward those groups according to the observed percentages of cases.
+
 **References:**  
 ^1^ "2016 Canada Census.” https://censusmapper.ca. Statistics Canada. Accessed October 10, 2020. https://censusmapper.ca

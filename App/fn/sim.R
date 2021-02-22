@@ -7,6 +7,15 @@ reference = tibble(AgeGroup =   c("under20", "20s"  , "30s"  , "40s"  , "50s"  ,
 confCases = read_csv("ref/data/conposcovidloc.csv", col_types=cols()) %>%
   select(Accurate_Episode_Date, Age_Group, Outcome1) %>%
   mutate(Accurate_Episode_Date = as_date(Accurate_Episode_Date))
+
+ageData = list(list(label="under20", infectRisk=0.1308),
+               list(label="20s", infectRisk=0.2083),
+               list(label="30s", infectRisk=0.1572),
+               list(label="40s", infectRisk=0.1419),
+               list(label="50s", infectRisk=0.1473),
+               list(label="60s", infectRisk=0.0939),
+               list(label="70s", infectRisk=0.0506),
+               list(label="over80", infectRisk=0.07))
 ###########################################################################################
 # Simulation initialization ###############################################################
 sim_make_agents = function(strategy="random", scaleFactor=1){
@@ -27,7 +36,10 @@ sim_make_agents = function(strategy="random", scaleFactor=1){
   
   # Generate simulated population
   agents = NULL
-  for (age in c("under20", "20s", "30s", "40s", "50s", "60s", "70s", "over80")){
+  for (ageGroup in ageData){
+    age = ageGroup$label
+    infectRisk = ageGroup$infectRisk
+    
     constants = filter(reference, AgeGroup == age)
     
     # Generate new agents
@@ -42,7 +54,8 @@ sim_make_agents = function(strategy="random", scaleFactor=1){
                        Risk = rep(constants$Risk, nAgents),
                        Infections = rep(0, nAgents),
                        Ticket = rep.int(0, nAgents),
-                       Vax = rep.int(0, nAgents))
+                       Vax = rep.int(0, nAgents),
+                       InfectionWeight = rep(infectRisk, nAgents))
     
     # Add new agents to simulation
     agents = rbind(agents, newAgents)
@@ -105,8 +118,8 @@ sim_iter = function(doses, vaxEff, vaxPartialEff, strategy, simState, scaleFacto
   if (nExposed > nExposable) {nExposed = nExposable}
   toExpose = simState %>%
     filter(State == 0) %>%
-    pull(UID) %>%
-    sample(nExposed)
+    slice_sample(n=nExposed, weight_by=InfectionWeight) %>%
+    pull(UID)
   
   simState = mutate(simState, State = ifelse(UID %in% toExpose & (Vax == 0 |  # Update agents
                                                                   Vax %in% 1:5 & rbinom(1, 1, vaxPartialEff/100) == 0 |
