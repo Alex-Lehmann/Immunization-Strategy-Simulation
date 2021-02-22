@@ -186,7 +186,7 @@ shinyUI(fluidPage(
                                                                                                                                           plotlyOutput("summaryDeathsComparison")
                                                                                                                                    )
                                                                                                                                ),
-                                                                                                                               HTML("<h2>Overall Strategy Effectiveness</h2>"),
+                                                                                                                               HTML("<h2>Strategy Effectiveness</h2>"),
                                                                                                                                htmlOutput("summaryMetricOverall"),
                                                                                                                                plotlyOutput("summaryMetricTotal"),
                                                                                                                   )
