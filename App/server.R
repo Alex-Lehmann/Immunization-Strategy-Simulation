@@ -32,6 +32,8 @@ shinyServer(function(input, output, session){
         # Localize dangerous inputs
         paramVax = input$paramVax
         values$paramDoses = input$paramDoses
+        values$metricCases = input$metricCases
+        values$metricDeaths = input$metricDeaths
         
         # Validate inputs
         if (is.na(input$paramVax) | input$paramVax < 0){
@@ -182,6 +184,9 @@ shinyServer(function(input, output, session){
         updateActionButton(session, "summaryDeaths", label=HTML(paste0("<h3><b>Total Deaths</h3><h4>", format(values$simDeaths, big.mark=",", scientific=FALSE), "</h4></b>")))
         updateActionButton(session, "summaryVax", label=HTML(paste0("<h3><b>Total Vaccinated</h3><h4>", format(values$simVax, big.mark=",", scientific=FALSE), "</h4></b>")))
         updateActionButton(session, "summaryMetric", label=HTML(paste0("<h3><b>Strategy Effectiveness</h3><h4>", format(round(values$userMetric, 2), scientific=FALSE), "%</h4></b>")))
+        
+        # Set tabs
+        updateTabsetPanel(session, "mainTabs", "main")
         updateTabsetPanel(session, "summaryTabs", "cases")
         updateTabsetPanel(session, "resultsTabs", "summary")
         
@@ -322,8 +327,8 @@ shinyServer(function(input, output, session){
             ),
             column(width=6, align="left",
                    HTML(paste0("<h4>",
-                               round(isolate(input$metricCases)), "%<br>",
-                               round(isolate(input$metricDeaths)), "%<br>",
+                               round(values$metricCases), "%<br>",
+                               round(values$metricDeaths), "%<br>",
                                format(round(values$userMetric, 2)), "%</h4>"))
             )
         )
@@ -333,15 +338,15 @@ shinyServer(function(input, output, session){
         
         # Compute user-defined metric for reference
         refData = tibble(Date = refCases$Date,
-                         Cases = refCases$Reference * isolate({input$metricCases / 100}),
-                         Deaths = refDeaths$Reference * isolate({input$metricDeaths / 100})) %>%
+                         Cases = refCases$Reference * (values$metricCases / 100),
+                         Deaths = refDeaths$Reference * values$metricDeaths / 100) %>%
             transmute(Date = Date,
                       Reference = Cases + Deaths)
         
         # Compute user-defined metric for simulation
         simData = inner_join(values$overallCases, values$overallDeaths, by="Date") %>%
-            mutate(`Total Cases` = `Total Cases` * isolate({input$metricCases / 100}),
-                   `Total Deaths` = `Total Deaths` * isolate({input$metricDeaths / 100})) %>%
+            mutate(`Total Cases` = `Total Cases` * (values$metricCases / 100),
+                   `Total Deaths` = `Total Deaths` * (values$metricDeaths / 100)) %>%
             transmute(Date = Date,
                       Simulation = `Total Cases` + `Total Deaths`)
         
