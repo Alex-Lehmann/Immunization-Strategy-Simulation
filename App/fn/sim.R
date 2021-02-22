@@ -15,7 +15,7 @@ ageData = list(list(label="under20", infectRisk=0.1308),
                list(label="50s", infectRisk=0.1473),
                list(label="60s", infectRisk=0.0939),
                list(label="70s", infectRisk=0.0506),
-               list(label="over80", infectRisk=0.07))
+               list(label="over80", infectRisk=0.0700))
 ###########################################################################################
 # Simulation initialization ###############################################################
 sim_make_agents = function(strategy="random", scaleFactor=1){
