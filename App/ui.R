@@ -64,7 +64,8 @@ shinyUI(fluidPage(
                                                                                                       <h4>Presets</h4>
                                                                                                       <p>Select pre-built vaccine distribution strategies from this menu. The currently-supported presets are:
                                                                                                       <ul>
-                                                                                                        <li><b>Highest-Risk First:</b> Vaccine distribution will prioritize individuals in age groups with higher COVID-19 mortality rates.</li>
+                                                                                                        <li><b>Age (Oldest First):</b> Vaccine distribution will prioritize individuals in older age groups.</li>
+                                                                                                        <li><b>Age (Youngest First):</b> Vaccine distribution will prioritize individuals in younger age groups.</li>
                                                                                                         <li><b>Random:</b> Vaccines are distributed randomly with no priority given to any group.</li>
                                                                                                       </ul>
                                                                                                       <h4>Number of Doses Per Patient</h4>
@@ -371,7 +372,8 @@ shinyUI(fluidPage(
                                                                    
                                                                    # Preset strategy input
                                                                    selectInput("paramStrategy", "Presets",
-                                                                               list("Highest-Risk First" = "risk",
+                                                                               list("Age (Oldest First)" = "ageDesc",
+                                                                                    "Age (Youngest First)" = "ageAsc",
                                                                                     "Random" = "random")),
                                                                    
                                                                    # Dosage selection
