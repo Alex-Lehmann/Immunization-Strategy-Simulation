@@ -32,7 +32,7 @@ sim_make_agents = function(strategy="random", priorityOrder=NULL, scaleFactor=1)
            Accurate_Episode_Date > as_date("2020-07-07"),
            Accurate_Episode_Date < as_date("2021-01-01")) %>%
     group_by(Week = week(Accurate_Episode_Date), Age_Group) %>%
-    summarize(Cases = n()) %>%
+    summarize(Cases = n(), .groups="drop") %>%
     pivot_wider(names_from = Age_Group, values_from = Cases) %>%
     replace_na(list(`70s` = 0, `80s` = 0, `90s` = 0)) %>%
     mutate(over80 = `80s` + `90s`) %>%

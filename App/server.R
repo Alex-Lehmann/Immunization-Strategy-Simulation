@@ -25,12 +25,12 @@ shinyServer(function(input, output, session){
     
     values = reactiveValues()
     values$hasRun = FALSE
+    values$trialsWarning = FALSE
     #######################################################################################
     # Simulation ##########################################################################
     observeEvent(input$runSimBn,{
         
         # Localize dangerous inputs
-        paramVax = input$paramVax
         values$paramDoses = input$paramDoses
         values$metricCases = input$metricCases
         values$metricDeaths = input$metricDeaths
@@ -38,108 +38,120 @@ shinyServer(function(input, output, session){
         # Validate inputs
         if (is.na(input$paramVax) | input$paramVax < 0){
             updateNumericInput(session, "paramVax", value=0)
-            paramVax = 0
+        }
+        if (is.na(input$paramTrials) | input$paramTrials < 1){
+            updateNumericInput(session, "paramTrials", 1)
         }
         
         # Random seed
         if (!is.na(input$paramSeed)){ set.seed(input$paramSeed) } else { set.seed(NULL) }
         
-        # Simulation initial conditions
-        nIter = 39
-        results = tibble(Iteration = 0,
-                         Cases_Under20 = 0,
-                         Cases_20s = 0,
-                         Cases_30s = 0,
-                         Cases_40s = 0,
-                         Cases_50s = 0,
-                         Cases_60s = 0,
-                         Cases_70s = 0,
-                         Cases_Over80 = 0,
-                         
-                         Deaths_Under20 = 0,
-                         Deaths_20s = 0,
-                         Deaths_30s = 0,
-                         Deaths_40s = 0,
-                         Deaths_50s = 0,
-                         Deaths_60s = 0,
-                         Deaths_70s = 0,
-                         Deaths_Over80 = 0,
-                         
-                         FullVax_Under20 = 0,
-                         FullVax_20s = 0,
-                         FullVax_30s = 0,
-                         FullVax_40s = 0,
-                         FullVax_50s = 0,
-                         FullVax_60s = 0,
-                         FullVax_70s = 0,
-                         FullVax_Over80 = 0,
-                         
-                         PartialVax_Under20 = 0,
-                         PartialVax_20s = 0,
-                         PartialVax_30s = 0,
-                         PartialVax_40s = 0,
-                         PartialVax_50s = 0,
-                         PartialVax_60s = 0,
-                         PartialVax_70s = 0,
-                         PartialVax_Over80 = 0,
-                         
-                         Active_Under20 = 0,
-                         Active_20s = 0,
-                         Active_30s = 0,
-                         Active_40s = 0,
-                         Active_50s = 0,
-                         Active_60s = 0,
-                         Active_70s = 0,
-                         Active_Over80 = 0,
-                         
-                         Immune_Under20 = 0,
-                         Immune_20s = 0,
-                         Immune_30s = 0,
-                         Immune_40s = 0,
-                         Immune_50s = 0,
-                         Immune_60s = 0,
-                         Immune_70s = 0,
-                         Immune_Over80 = 0)
-        
-        # Display busy dialog
-        show_modal_spinner(spin="swapping-squares", color="#112446", text="Simulating...")
-        
-        # Generate agents and record active cases
-        print("Generating agents")
-        agents = sim_make_agents(input$paramStrategy, input$paramRank, input$paramScaling)
-        
-        # Initial state
-        results = mutate(results,
-                         Active_Under20 = sim_activeByAge(agents, "under20")*input$paramScaling,
-                         Active_20s = sim_activeByAge(agents, "20s")*input$paramScaling,
-                         Active_30s = sim_activeByAge(agents, "30s")*input$paramScaling,
-                         Active_40s = sim_activeByAge(agents, "40s")*input$paramScaling,
-                         Active_50s = sim_activeByAge(agents, "50s")*input$paramScaling,
-                         Active_60s = sim_activeByAge(agents, "60s")*input$paramScaling,
-                         Active_70s = sim_activeByAge(agents, "70s")*input$paramScaling,
-                         Active_Over80 = sim_activeByAge(agents, "over80")*input$paramScaling,
-                         
-                         Immune_Under20 = sim_immuneByAge(agents, "under20")*input$paramScaling,
-                         Immune_20s = sim_immuneByAge(agents, "20s")*input$paramScaling,
-                         Immune_30s = sim_immuneByAge(agents, "30s")*input$paramScaling,
-                         Immune_40s = sim_immuneByAge(agents, "40s")*input$paramScaling,
-                         Immune_50s = sim_immuneByAge(agents, "50s")*input$paramScaling,
-                         Immune_60s = sim_immuneByAge(agents, "60s")*input$paramScaling,
-                         Immune_70s = sim_immuneByAge(agents, "70s")*input$paramScaling,
-                         Immune_Over80 = sim_immuneByAge(agents, "over80")*input$paramScaling)
-        
-        # Run simulation
-        for (i in 1:nIter){
-            update_modal_progress(value=progress, text=paste0("Simulating iteration ", i," of " ,nIter, "..."))
+        overallResults = NULL
+        for (i in 1:input$paramTrials){
+            print(paste0("Beginning trial #", i))
             
-            print(paste0("Starting iteration ", i))
-            agents = sim_iter(paramVax, input$paramFullEff, input$paramPartEff, input$paramDoses, agents, input$paramScaling)
+            # Simulation initial conditions
+            nIter = 39
+            results = tibble(Iteration = 0,
+                             Cases_Under20 = 0,
+                             Cases_20s = 0,
+                             Cases_30s = 0,
+                             Cases_40s = 0,
+                             Cases_50s = 0,
+                             Cases_60s = 0,
+                             Cases_70s = 0,
+                             Cases_Over80 = 0,
+                             
+                             Deaths_Under20 = 0,
+                             Deaths_20s = 0,
+                             Deaths_30s = 0,
+                             Deaths_40s = 0,
+                             Deaths_50s = 0,
+                             Deaths_60s = 0,
+                             Deaths_70s = 0,
+                             Deaths_Over80 = 0,
+                             
+                             FullVax_Under20 = 0,
+                             FullVax_20s = 0,
+                             FullVax_30s = 0,
+                             FullVax_40s = 0,
+                             FullVax_50s = 0,
+                             FullVax_60s = 0,
+                             FullVax_70s = 0,
+                             FullVax_Over80 = 0,
+                             
+                             PartialVax_Under20 = 0,
+                             PartialVax_20s = 0,
+                             PartialVax_30s = 0,
+                             PartialVax_40s = 0,
+                             PartialVax_50s = 0,
+                             PartialVax_60s = 0,
+                             PartialVax_70s = 0,
+                             PartialVax_Over80 = 0,
+                             
+                             Active_Under20 = 0,
+                             Active_20s = 0,
+                             Active_30s = 0,
+                             Active_40s = 0,
+                             Active_50s = 0,
+                             Active_60s = 0,
+                             Active_70s = 0,
+                             Active_Over80 = 0,
+                             
+                             Immune_Under20 = 0,
+                             Immune_20s = 0,
+                             Immune_30s = 0,
+                             Immune_40s = 0,
+                             Immune_50s = 0,
+                             Immune_60s = 0,
+                             Immune_70s = 0,
+                             Immune_Over80 = 0)
             
-            results = sim_results(agents, results, i, input$paramScaling)
-            print(paste0("Iteration ", i, " complete"))
+            # Display busy dialog
+            show_modal_spinner(spin="swapping-squares", color="#112446", text="Simulating...")
+            
+            # Generate agents and record active cases
+            print("Generating agents")
+            agents = sim_make_agents(input$paramStrategy, input$paramRank, input$paramScaling)
+            
+            # Initial state
+            results = mutate(results,
+                             Active_Under20 = sim_activeByAge(agents, "under20")*input$paramScaling,
+                             Active_20s = sim_activeByAge(agents, "20s")*input$paramScaling,
+                             Active_30s = sim_activeByAge(agents, "30s")*input$paramScaling,
+                             Active_40s = sim_activeByAge(agents, "40s")*input$paramScaling,
+                             Active_50s = sim_activeByAge(agents, "50s")*input$paramScaling,
+                             Active_60s = sim_activeByAge(agents, "60s")*input$paramScaling,
+                             Active_70s = sim_activeByAge(agents, "70s")*input$paramScaling,
+                             Active_Over80 = sim_activeByAge(agents, "over80")*input$paramScaling,
+                             
+                             Immune_Under20 = sim_immuneByAge(agents, "under20")*input$paramScaling,
+                             Immune_20s = sim_immuneByAge(agents, "20s")*input$paramScaling,
+                             Immune_30s = sim_immuneByAge(agents, "30s")*input$paramScaling,
+                             Immune_40s = sim_immuneByAge(agents, "40s")*input$paramScaling,
+                             Immune_50s = sim_immuneByAge(agents, "50s")*input$paramScaling,
+                             Immune_60s = sim_immuneByAge(agents, "60s")*input$paramScaling,
+                             Immune_70s = sim_immuneByAge(agents, "70s")*input$paramScaling,
+                             Immune_Over80 = sim_immuneByAge(agents, "over80")*input$paramScaling)
+            
+            # Run simulation
+            for (j in 1:nIter){
+                agents = sim_iter(input$paramVax, input$paramFullEff, input$paramPartEff, input$paramDoses, agents, input$paramScaling)
+                results = sim_results(agents, results, j, input$paramScaling)
+                print(paste0("Iteration ", j, " complete"))
+            }
+            print(paste0("Trial #", i, " complete"))
+            results = mutate(results, Date = as_date("2021-01-01") + (7*Iteration))
+            
+            # Add trial results to total
+            overallResults = rbind(overallResults, results)
         }
-        print("Simulation complete")
-        values$results = mutate(results, Date = as_date("2021-01-01") + (7*Iteration))
+        
+        # Process overall results
+        values$results = overallResults %>%
+            group_by(Date) %>%
+            summarize(across(.fns=mean), .groups="drop") %>%
+            mutate(across(!Date, round))
         
         # Process summary results
         values$overallCases = values$results %>%
@@ -971,6 +983,17 @@ shinyServer(function(input, output, session){
     observeEvent(input$metricHelpBn,{
         updateTabsetPanel(session, "helpTabs", select="metric")
         updateTabsetPanel(session, "infoTabs", select="help")
+    })
+    
+    #######################################################################################
+    # Warning modals ######################################################################
+    
+    observeEvent(input$paramTrials,{
+        if (input$paramTrials > 1 & !values$trialsWarning){
+            values$trialsWarning = TRUE
+            showModal(modalDialog(title="Warning!",
+                                  "Running multiple trials in one simulation may result in long computation times."))
+        }
     })
     
     #######################################################################################

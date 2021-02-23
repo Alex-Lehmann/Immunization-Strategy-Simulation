@@ -67,6 +67,7 @@ shinyUI(fluidPage(
                                                                                                         <li><b>Age (Oldest First):</b> Vaccine distribution will prioritize individuals in older age groups.</li>
                                                                                                         <li><b>Age (Youngest First):</b> Vaccine distribution will prioritize individuals in younger age groups.</li>
                                                                                                         <li><b>Random:</b> Vaccines are distributed randomly with no priority given to any group.</li>
+                                                                                                        <li><b>User-Defined:</b> Users may define their own vaccination strategies by selecting their groups of interest and ordering to establish priority. Non-prioritized groups will be vaccinated randomly after the priority groups.</li>
                                                                                                       </ul>
                                                                                                       <h4>Number of Doses Per Patient</h4>
                                                                                                       <p>This choice determines how many doses of vaccine each agent may receive. A one-dose strategy will result in all agents receiving a only single dose while a two-dose strategy will result in all agents receiving a second dose after 4 weeks.<br>")
@@ -76,7 +77,9 @@ shinyUI(fluidPage(
                                                                                                       <h4>Seed Value</h4>
                                                                                                       <p>Users may pass a seed value to the simulation to ensure reproducible results. Pass an empty value to run the simulation without a seed value.<br>
                                                                                                       <h4>Agent Scaling Factor</h4>
-                                                                                                      <p>This parameter allows users to increase the speed of the simulation procedure at the expense of some accuracy. Increase this value to decrease computation time.<br>")
+                                                                                                      <p>This parameter allows users to increase the speed of the simulation procedure at the expense of some accuracy. Increase this value to decrease computation time.<br>
+                                                                                                      <h4>Number of Trials</h4>
+                                                                                                      <p>The number of simulation trials to run. Displayed results will be the mean of the results of each individual trial. Note that this parameter can greatly increase computation time.<br>")
                                                                                     ),
                                                                                     tabPanelBody(NULL, value="metric",
                                                                                                  HTML("<h3>Evaluation Priorities</h3>
@@ -422,7 +425,9 @@ shinyUI(fluidPage(
                                                                    numericInput("paramSeed", "Seed Value",
                                                                                 value=NA, min=0, step=1),
                                                                    sliderInput("paramScaling", "Agent Scaling Factor", ticks=FALSE,
-                                                                               value=50, min=1, max=100, step=1)
+                                                                               value=50, min=1, max=100, step=1),
+                                                                   numericInput("paramTrials", "Number of Trials",
+                                                                                value=1, min=0, step=1)
                                                             )
                                                         ),
                                                         
