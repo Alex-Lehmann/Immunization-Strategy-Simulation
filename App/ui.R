@@ -1,7 +1,7 @@
 library(shiny)
 
 # Load packages
-packages = c("tidyverse", "lubridate", "shinybusy", "shinyWidgets", "plotly", "DT")
+packages = c("tidyverse", "lubridate", "shinybusy", "shinyWidgets", "plotly", "DT", "sortable")
 
 source("fn/loadPackages.R")
 loadPackages(packages)
@@ -370,11 +370,16 @@ shinyUI(fluidPage(
                                                                      )
                                                                    ),
                                                                    
-                                                                   # Preset strategy input
-                                                                   selectInput("paramStrategy", "Presets",
+                                                                   # Strategy input
+                                                                   selectInput("paramStrategy", "Vaccination Priority",
                                                                                list("Age (Oldest First)" = "ageDesc",
                                                                                     "Age (Youngest First)" = "ageAsc",
-                                                                                    "Random" = "random")),
+                                                                                    "Random" = "random",
+                                                                                    "User-Defined" = "custom")),
+                                                                   conditionalPanel("input.paramStrategy == 'custom'",
+                                                                                    uiOutput("priorityRankList"),
+                                                                                    actionButton("customStrategyBn", "Edit Priority Groups", width="100%"),
+                                                                                    HTML("<br><br>")),
                                                                    
                                                                    # Dosage selection
                                                                    radioButtons("paramDoses", "Number of Doses Per Patient", inline=TRUE,

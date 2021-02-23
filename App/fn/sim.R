@@ -1,3 +1,7 @@
+library(tidyverse)
+library(lubridate)
+source("fn/custom_priority.R")
+
 ###########################################################################################
 # Known constants #########################################################################
 reference = tibble(AgeGroup =   c("under20", "20s"  , "30s"  , "40s"  , "50s"  , "60s"  , "70s" , "over80"),
@@ -16,9 +20,11 @@ ageData = list(list(label="under20", infectRisk=0.1308),
                list(label="60s", infectRisk=0.0939),
                list(label="70s", infectRisk=0.0506),
                list(label="over80", infectRisk=0.0700))
+
 ###########################################################################################
 # Simulation initialization ###############################################################
-sim_make_agents = function(strategy="random", scaleFactor=1){
+
+sim_make_agents = function(strategy="random", priorityOrder=NULL, scaleFactor=1){
   
   # Find individuals with active infections or natural immunity
   caseStatus = confCases %>%
@@ -67,7 +73,8 @@ sim_make_agents = function(strategy="random", scaleFactor=1){
   switch(strategy,
     ageDesc = {agents = arrange(agents, desc(row_number()))},
     ageAsc = {agents = arrange(agents, row_number())},
-    random = {agents = slice_sample(agents, n=totalAgents)}
+    custom = {agents = custom_priority(agents, priorityOrder)},
+    {agents = slice_sample(agents, n=totalAgents)}
   )
   agents$Ticket = 1:totalAgents
   
@@ -90,6 +97,7 @@ sim_make_agents = function(strategy="random", scaleFactor=1){
 #   *2-4: waiting for second dose (partial immunity)
 #   *5: new second dose (partial immunity)
 #   *6: fully vaccinated
+
 sim_iter = function(doses, vaxEff, vaxPartialEff, strategy, simState, scaleFactor=1){
   
   # Kill off fatal cases
@@ -163,6 +171,7 @@ sim_iter = function(doses, vaxEff, vaxPartialEff, strategy, simState, scaleFacto
 
 ###########################################################################################
 # Results update ##########################################################################
+
 sim_results = function(state, results, iter, scaleFactor=1){
   
   # Get current totals per age group from simulation state
@@ -185,6 +194,7 @@ sim_results = function(state, results, iter, scaleFactor=1){
 
 ###########################################################################################
 # Results helper functions ################################################################
+
 sim_activeByAge = function(state, ages){
   state %>%
     filter(AgeGroup == ages) %>%
@@ -198,3 +208,5 @@ sim_immuneByAge = function(state, ages){
     summarize(Immune = sum(State %in% 1:24)) %>%
     pull(Immune)
 }
+
+###########################################################################################

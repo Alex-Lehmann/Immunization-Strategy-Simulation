@@ -106,7 +106,7 @@ shinyServer(function(input, output, session){
         
         # Generate agents and record active cases
         print("Generating agents")
-        agents = sim_make_agents(input$paramStrategy, input$paramScaling)
+        agents = sim_make_agents(input$paramStrategy, input$paramRank, input$paramScaling)
         
         # Initial state
         results = mutate(results,
@@ -348,14 +348,14 @@ shinyServer(function(input, output, session){
         userMetric = full_join(casePercent, deathPercent, by="Date") %>%
             drop_na() %>%
             mutate(Overall = (values$metricCases*`Case Mitigation`) + (values$metricDeaths*`Mortality Mitigation`),
-                   `Case Mitigation` = 100 * `Case Mitigation`,
-                   `Mortality Mitigation` = 100 * `Mortality Mitigation`,
+                   `Case Mitigation` = round(100 * `Case Mitigation`, 2),
+                   `Mortality Mitigation` = round(100 * `Mortality Mitigation`, 2),
                    Reference = rep(0, 39)) %>%
-            pivot_longer(!Date, names_to="Metric", values_to="Percent Change")
+            pivot_longer(!Date, names_to="Metric", values_to="Percent Improvement")
         
         # Plot
         plot = userMetric %>%
-            ggplot(aes(x=Date, y=`Percent Change`, color=Metric, linetype=Metric)) +
+            ggplot(aes(x=Date, y=`Percent Improvement`, color=Metric, linetype=Metric)) +
             geom_line() +
             scale_color_manual(values=c(casesColor, deathsColor, vaxColor, "#000000")) +
             scale_linetype_manual(values=c("solid", "solid", "solid", "dotted")) +
@@ -789,6 +789,7 @@ shinyServer(function(input, output, session){
         df = values$results %>%
             select(Date, starts_with("FullVax")) %>%
             mutate(across(starts_with("FullVax"), function(x){ c(NA, diff(x)) })) %>%
+            filter(Date > as_date("2021-01-01")) %>%
             pivot_longer(!Date, names_to="AgeGroup", values_to="New Vaccinations") %>%
             mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
                    AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
@@ -848,6 +849,7 @@ shinyServer(function(input, output, session){
         df = values$results %>%
             select(Date, starts_with("PartialVax")) %>%
             mutate(across(starts_with("FullVax"), function(x){ c(NA, diff(x)) })) %>%
+            filter(Date > as_date("2021-01-01")) %>%
             pivot_longer(!Date, names_to="AgeGroup", values_to="New Vaccinations") %>%
             mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
                    AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
@@ -902,7 +904,28 @@ shinyServer(function(input, output, session){
             config(displayModeBar = FALSE)
     })
     
+    #######################################################################################
+    # Manual vaccine priority UI elements #################################################
     
+    # Reactive rank list
+    output$priorityRankList = renderUI({ rank_list("Higher Priority", "paramRank", labels=c(input$paramAgeGroups)) })
+    
+    # Event handlers to show modal
+    observeEvent(input$paramStrategy,{
+        if (input$paramStrategy == "custom"){ showModal(priorityModal()) }
+    })
+    observeEvent(input$customStrategyBn,{
+        showModal(priorityModal())
+    })
+    
+    # Priority group select dialog
+    priorityModal = function(){
+        modalDialog(title="Select Priority Groups", size="l", footer=modalButton("Close Window"),
+                    checkboxGroupInput("paramAgeGroups", "Select priority age group(s):", inline=TRUE,
+                                       c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"),
+                                       selected=input$paramAgeGroups)
+        )
+    }
     
     #######################################################################################
     # User-defined metric linked sliders ##################################################
