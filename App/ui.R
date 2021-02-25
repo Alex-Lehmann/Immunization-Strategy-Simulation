@@ -1,10 +1,11 @@
 library(shiny)
-
-# Load packages
-packages = c("tidyverse", "lubridate", "shinybusy", "shinyWidgets", "plotly", "DT", "sortable")
-
-source("fn/loadPackages.R")
-loadPackages(packages)
+library(tidyverse)
+library(lubridate)
+library(shinybusy)
+library(shinyWidgets)
+library(plotly)
+library(DT)
+library(sortable)
 source("fn/sim.R")
 
 # Color palette
