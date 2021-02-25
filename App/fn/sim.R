@@ -58,17 +58,6 @@ sim_make_agents = function(strategy="random", priorityOrder=NULL, scaleFactor=1)
     
     # Geographic location and marginalization levels
     margCSDs = marginalization %>%
-      mutate(Deprivation = replace(Deprivation, Deprivation == 1, "Lowest Deprivation"),
-             Deprivation = replace(Deprivation, Deprivation == 2, "Low Deprivation"),
-             Deprivation = replace(Deprivation, Deprivation == 3, "Moderate Deprivation"),
-             Deprivation = replace(Deprivation, Deprivation == 4, "High Deprivation"),
-             Deprivation = replace(Deprivation, Deprivation == 5, "Highest Deprivation"),
-             
-             EthnicCon = replace(EthnicCon, EthnicCon == 1, "Lowest Diversity"),
-             EthnicCon = replace(EthnicCon, EthnicCon == 2, "Low Diversity"),
-             EthnicCon = replace(EthnicCon, EthnicCon == 3, "Moderate Diversity"),
-             EthnicCon = replace(EthnicCon, EthnicCon == 4, "High Diversity"),
-             EthnicCon = replace(EthnicCon, EthnicCon == 5, "Highest Diversity")) %>%
       slice_sample(n=nAgents, weight_by=marginalization[[age]], replace=TRUE) %>%
       select(Deprivation, EthnicCon, DeprivationModifier, EthnicModifier)
     
@@ -100,7 +89,7 @@ sim_make_agents = function(strategy="random", priorityOrder=NULL, scaleFactor=1)
     ethDesc = {agents = agents %>% slice_sample(n=totalAgents) %>% arrange(desc(EthnicCon))},
     ethAsc = {agents = agents %>% slice_sample(n=totalAgents) %>% arrange(EthnicCon)},
     depDesc = {agents = agents %>% slice_sample(n=totalAgents) %>% arrange(desc(Deprivation))},
-    depAsc = {agents = agents %>% slice_sample(n=totalAgents) %>% ararnge(Deprivation)},
+    depAsc = {agents = agents %>% slice_sample(n=totalAgents) %>% arrange(Deprivation)},
     custom = {agents = custom_priority(agents, priorityOrder)},
     {agents = slice_sample(agents, n=totalAgents)}
   )
