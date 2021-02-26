@@ -54,7 +54,7 @@ shinyUI(fluidPage(
                                                                                     tabPanelBody(NULL, value="vax",
                                                                                                  HTML("<h3>Provincial Vaccine Availability</h3>
                                                                                                       <h4>Vaccine Doses Per Week</h4>
-                                                                                                      <p>This parameter controls the mean number of vaccine doses administered per week. Passing a value of 0 results in a simulation with no vaccinations.<br>
+                                                                                                      <p>This parameter controls the mean number of vaccine doses administered per week. This value must be greater than or equal to the Agent Scaling Factor. Passing a value of 0 results in a simulation with no vaccinations.<br>
                                                                                                       <h4>Full Efficacy</h4>
                                                                                                       <p>Use this parameter to set the efficacy of the vaccine <i>after two doses</i>. An agent who is exposed to SARS-CoV-2 after two doses of vaccine will be protected from infection according to the selected value of this parameter.<br>
                                                                                                       <h4>Partial Efficacy</h4>
@@ -62,16 +62,18 @@ shinyUI(fluidPage(
                                                                                     ),
                                                                                     tabPanelBody(NULL, value="strategy",
                                                                                                  HTML("<h3>Distribution Strategy</h3>
-                                                                                                      <h4>Presets</h4>
-                                                                                                      <p>Select pre-built vaccine distribution strategies from this menu. The currently-supported presets are:
+                                                                                                      <h4>Vaccination Priority</h4>
+                                                                                                      <p>Select vaccine priority strategies from this menu. The currently-supported choices are:
                                                                                                       <ul>
                                                                                                         <li><b>Age (Oldest First):</b> Vaccine distribution will prioritize individuals in older age groups.</li>
                                                                                                         <li><b>Age (Youngest First):</b> Vaccine distribution will prioritize individuals in younger age groups.</li>
+                                                                                                        <li><b>Material Deprivation (High to Low):</b> Vaccine distribution will prioritize individuals residing in areas with high material deprivation levels, as determined by the 2016 Ontario Marginalization Index.</li>
+                                                                                                        <li><b>Material Deprivation (Low to High):</b> Vaccine distribution will prioritize individuals residing in areas with low material deprivations levels, as determined by the 2016 Ontario Marginalization Index.</li>
                                                                                                         <li><b>Random:</b> Vaccines are distributed randomly with no priority given to any group.</li>
                                                                                                         <li><b>User-Defined:</b> Users may define their own vaccination strategies by selecting their groups of interest and ordering to establish priority. Non-prioritized groups will be vaccinated randomly after the priority groups.</li>
                                                                                                       </ul>
                                                                                                       <h4>Number of Doses Per Patient</h4>
-                                                                                                      <p>This choice determines how many doses of vaccine each agent may receive. A one-dose strategy will result in all agents receiving a only single dose while a two-dose strategy will result in all agents receiving a second dose after 4 weeks.<br>")
+                                                                                                      <p>This choice determines how many doses of vaccine each agent may receive. A one-dose strategy will result in all persons receiving a only single dose while a two-dose strategy will result in all persons receiving a second dose after 4 weeks.<br>")
                                                                                     ),
                                                                                     tabPanelBody(NULL, value="sim",
                                                                                                  HTML("<h3>Simulation Settings</h3>
@@ -103,7 +105,7 @@ shinyUI(fluidPage(
                                                                 tabPanelBody(NULL, value="start"),
                                                                 tabPanelBody(NULL, value="main",
                                                                              wellPanel(
-                                                                                 titlePanel("Simulation Results"),
+                                                                                 titlePanel(HTML("<h1>Simulation Results</h1>")),
                                                                                  
                                                                                  tabsetPanel(type="tabs", id="resultsTabs",
                                                                                              
@@ -199,47 +201,71 @@ shinyUI(fluidPage(
                                                                                              
                                                                                              # Detailed epidemiological results
                                                                                              tabPanel("Case Spread", value="cases",
-                                                                                                      
-                                                                                                      # Time series by age group
-                                                                                                      titlePanel(HTML("<h2>Time Series of Cases, By Age Group</h2>")),
-                                                                                                      
-                                                                                                      titlePanel(HTML("<h3>Active Cases</h3>")),
-                                                                                                      radioButtons("activeCasesTSbyAgeType", "Display as:", inline=TRUE,
-                                                                                                                   c("Stacked Area Plot", "Line Plot")),
-                                                                                                      plotlyOutput("activeCasesTSbyAge"),
-                                                                                                      
-                                                                                                      fluidRow(
-                                                                                                          column(width=6, align="center",
-                                                                                                                 titlePanel(HTML("<h3>Cumulative Cases</h3>")),
-                                                                                                                 radioButtons("totalCasesTSbyAgeType", "Display as:", inline=TRUE,
-                                                                                                                              c("Stacked Area Plot", "Line Plot")),
-                                                                                                                 plotlyOutput("totalCasesTSbyAge")
-                                                                                                          ),
-                                                                                                          column(width=6, align="center",
-                                                                                                                 titlePanel(HTML("<h3>New Cases</h3>")),
-                                                                                                                 radioButtons("newCasesTSbyAgeType", "Display as:", inline=TRUE,
-                                                                                                                              c("Stacked Area Plot", "Line Plot"), selected="Line Plot"),
-                                                                                                                 plotlyOutput("newCasesTSbyAge")
-                                                                                                          )
-                                                                                                      ),
-                                                                                                      # Time series tables
-                                                                                                      HTML("<br>"),
-                                                                                                      selectInput("caseTableSelect", "View detailed data for:", width="30%",
-                                                                                                                  list("Active Cases" = "Active_",
-                                                                                                                       "Cumulative Cases" = "Cases_",
-                                                                                                                       "New Cases" = "New")),
-                                                                                                      dataTableOutput("casesTable"),
-                                                                                                      
-                                                                                                      
                                                                                                       # Reproduction rate
-                                                                                                      titlePanel(HTML("<br><h2>Reproduction Rate</h3>")),
-                                                                                                      plotlyOutput("reproductionPlot")
+                                                                                                      titlePanel(HTML("<h1>Reproduction Rate</h1>")),
+                                                                                                      plotlyOutput("reproductionPlot"),
+                                                                                                      
+                                                                                                      titlePanel(HTML("<br><h1>Sub-Populations of Interest</h1>")),
+                                                                                                      tabsetPanel(
+                                                                                                          tabPanel("Age Groups",
+                                                                                                                   titlePanel(HTML("<h2>Time Series of Cases, By Age Group</h2>")),
+                                                                                                                   
+                                                                                                                   titlePanel(HTML("<h3>Active Cases</h3>")),
+                                                                                                                   radioButtons("activeCasesTSbyAgeType", "Display as:", inline=TRUE,
+                                                                                                                                c("Stacked Area Plot", "Line Plot")),
+                                                                                                                   plotlyOutput("activeCasesTSbyAge"),
+                                                                                                                   
+                                                                                                                   fluidRow(
+                                                                                                                       column(width=6, align="center",
+                                                                                                                              titlePanel(HTML("<h3>Cumulative Cases</h3>")),
+                                                                                                                              radioButtons("totalCasesTSbyAgeType", "Display as:", inline=TRUE,
+                                                                                                                                           c("Stacked Area Plot", "Line Plot")),
+                                                                                                                              plotlyOutput("totalCasesTSbyAge")
+                                                                                                                       ),
+                                                                                                                       column(width=6, align="center",
+                                                                                                                              titlePanel(HTML("<h3>New Cases</h3>")),
+                                                                                                                              radioButtons("newCasesTSbyAgeType", "Display as:", inline=TRUE,
+                                                                                                                                           c("Stacked Area Plot", "Line Plot"), selected="Line Plot"),
+                                                                                                                              plotlyOutput("newCasesTSbyAge")
+                                                                                                                       )
+                                                                                                                   )
+                                                                                                          ),
+                                                                                                          
+                                                                                                          tabPanel("Material Deprivation Levels",
+                                                                                                                   titlePanel(HTML("<h2>Time Series of Cases, By Material Deprivation Level</h2>")),
+                                                                                                                   
+                                                                                                                   titlePanel(HTML("<h3>Active Cases</h3>")),
+                                                                                                                   radioButtons("activeCasesTSbyDepType", "Display as:", inline=TRUE,
+                                                                                                                                c("Stacked Area Plot", "Line Plot")),
+                                                                                                                   plotlyOutput("activeCasesTSbyDep"),
+                                                                                                                   
+                                                                                                                   fluidRow(
+                                                                                                                       column(width=6, align="center",
+                                                                                                                              titlePanel(HTML("<h3>Cumulative Cases</h3>")),
+                                                                                                                              radioButtons("totalCasesTSByDepType", "Display as:", inline=TRUE,
+                                                                                                                                           c("Stacked Area Plot", "Line Plot")),
+                                                                                                                              plotlyOutput("totalCasesTSbyDep")
+                                                                                                                       ),
+                                                                                                                       column(width=6, align="center",
+                                                                                                                              titlePanel(HTML("<h3>New Cases</h3>")),
+                                                                                                                              radioButtons("newCasesTSByDepType", "Display as:", inline=TRUE,
+                                                                                                                                           c("Stacked Area Plot", "Line Plot"), selected="Line Plot"),
+                                                                                                                              plotlyOutput("newCasesTSbyDep")
+                                                                                                                        ),
+                                                                                                                   )
+                                                                                                          )
+                                                                                                      )
                                                                                              ),
                                                                                              
                                                                                              # Detailed mortality results
                                                                                              tabPanel("Illness Severity", value="severity",
                                                                                                       
+                                                                                                      # Mortality rate
+                                                                                                      titlePanel(HTML("<h1>Mortality Rate</h1>")),
+                                                                                                      plotlyOutput("mortalityPlot"),
+                                                                                                      
                                                                                                       # Time series by age group
+                                                                                                      titlePanel(HTML("<br><h2>Age Group Results</h2>")),
                                                                                                       titlePanel(HTML("<h2>Time Series of Deaths, By Age Group</h2>")),
                                                                                                       fluidRow(
                                                                                                           column(width=6, align="center",
@@ -255,22 +281,13 @@ shinyUI(fluidPage(
                                                                                                                  plotlyOutput("newDeathsTSbyAge")
                                                                                                           )
                                                                                                       ),
-                                                                                                      # Time series tables
-                                                                                                      HTML("<br>"),
-                                                                                                      selectInput("deathsTableSelect", "View detailed data for:", width="30%",
-                                                                                                                  c("Cumulative Deaths", "New Deaths")),
-                                                                                                      dataTableOutput("deathsTable"),
                                                                                                       
                                                                                                       # Age group comparison
                                                                                                       titlePanel(HTML("<br><h2>Cumulative Outcomes Per Age Group</h2>")),
                                                                                                       plotlyOutput("caseOutcomePlot"),
                                                                                                       HTML("<br>"),
                                                                                                       sliderInput("caseOutcomePlotTime", "Show data through:",
-                                                                                                                  min=as_date("2021-01-08"), max=as_date("2021-10-01"), step=7, value=as_date("2021-10-01")),
-                                                                                                      
-                                                                                                      # Mortality rate
-                                                                                                      titlePanel(HTML("<br><h2>Mortality Rate </h2>")),
-                                                                                                      plotlyOutput("mortalityPlot")
+                                                                                                                  min=as_date("2021-01-08"), max=as_date("2021-10-01"), step=7, value=as_date("2021-10-01"))   
                                                                                              ),
                                                                                              
                                                                                              # Detailed vaccinations
@@ -283,50 +300,21 @@ shinyUI(fluidPage(
                                                                                                       titlePanel(HTML("<h3>Immunity Types by Proportion</h3>")),
                                                                                                       plotlyOutput("immunityProportionTS"),
                                                                                                       
-                                                                                                      # Time series by age group
-                                                                                                      titlePanel(HTML("<br><h2>Time Series of Immunity, By Age Group</h2>")),
+                                                                                                      titlePanel(HTML("<h2>Time Series of Vaccinations, By Age Group</h2>")),
                                                                                                       fluidRow(
                                                                                                           column(width=6, align="center",
                                                                                                                  titlePanel(HTML("<h3>Cumulative Vaccinations</h3>")),
                                                                                                                  radioButtons("totalVaxTSbyAgeType", "Display as:", inline=TRUE,
                                                                                                                               c("Stacked Area Plot", "Line Plot")),
+                                                                                                                 plotlyOutput("totalFullVaxTSbyAge")
                                                                                                           ),
                                                                                                           column(width=6, align="center",
                                                                                                                  titlePanel(HTML("<h3>New Vaccinations</h3>")),
                                                                                                                  radioButtons("newVaxTSbyAgeType", "Display as:", inline=TRUE,
                                                                                                                               c("Stacked Area Plot", "Line Plot"), selected="Line Plot"),
-                                                                                                          ),
-                                                                                                      ),
-                                                                                                      fluidRow(
-                                                                                                          column(width=12, align="center",
-                                                                                                                 titlePanel(HTML("<h4>Full Vaccinations</h4>"))
-                                                                                                          )
-                                                                                                      ),
-                                                                                                      fluidRow(
-                                                                                                          column(width=6, align="center",
-                                                                                                                 plotlyOutput("totalFullVaxTSbyAge")
-                                                                                                          ),
-                                                                                                          column(width=6, align="center",
                                                                                                                  plotlyOutput("newFullVaxTSbyAge")
                                                                                                           ),
-                                                                                                      ),
-                                                                                                      fluidRow(
-                                                                                                          column(width=12, align="center",
-                                                                                                                 titlePanel(HTML("<h4>Partial Vaccinations</h4>"))
-                                                                                                          )
-                                                                                                      ),
-                                                                                                      fluidRow(
-                                                                                                          column(width=6, align="center",
-                                                                                                                 plotlyOutput("totalPartVaxTSbyAge")
-                                                                                                          ),
-                                                                                                          column(width=6, align="center",
-                                                                                                                 plotlyOutput("newPartVaxTSbyAge")
-                                                                                                          ),
-                                                                                                      ),
-                                                                                                      titlePanel(HTML("<h3>Active Post-Infection Immunity</h3>")),
-                                                                                                      radioButtons("activePItsType", "Display as:", inline=TRUE,
-                                                                                                                   c("Stacked Area Plot", "Line Plot")),
-                                                                                                      plotlyOutput("activePIts")
+                                                                                                      )
                                                                                              )
                                                                                  )
                                                                              )
@@ -378,6 +366,8 @@ shinyUI(fluidPage(
                                                                    selectInput("paramStrategy", "Vaccination Priority",
                                                                                list("Age (Oldest First)" = "ageDesc",
                                                                                     "Age (Youngest First)" = "ageAsc",
+                                                                                    "Material Deprivation (High to Low)" = "depDesc",
+                                                                                    "Material Deprivation (Low to High)" = "depAsc",
                                                                                     "Random" = "random",
                                                                                     "User-Defined" = "custom")),
                                                                    conditionalPanel("input.paramStrategy == 'custom'",
@@ -453,8 +443,9 @@ shinyUI(fluidPage(
                                         ),
                                         tabPanel("Vaccination Strategies",
                                                  tabsetPanel(type="pills",
-                                                             tabPanel("Risk Groups", includeHTML("ref/riskGroups.html")),
-                                                             tabPanel("Target Metric", includeHTML("ref/targetMetric.html"))
+                                                             tabPanel("Target Metric", includeHTML("ref/targetMetric.html")),
+                                                             tabPanel("Age Groups", includeHTML("ref/ageGroups.html")),
+                                                             tabPanel("Material Deprivation Levels", includeHTML("ref/materialDeprivation.html"))
                                                  )
                                         )
                             )

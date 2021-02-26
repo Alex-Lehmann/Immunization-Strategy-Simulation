@@ -9,7 +9,6 @@ reference = tibble(AgeGroup =   c("under20", "20s"  , "30s"  , "40s"  , "50s"  ,
                    Risk = c(2/34355, 8/54757, 17/41002, 51/37089, 196/38353, 554/24446, 1200/13176, 4454/18227))
 
 confCases = read_csv("ref/data/conposcovidloc.csv", col_types=cols()) %>%
-  select(Accurate_Episode_Date, Age_Group, Outcome1) %>%
   mutate(Accurate_Episode_Date = as_date(Accurate_Episode_Date))
 
 ageData = list(list(label="under20", infectRisk=0.1308),
@@ -20,6 +19,8 @@ ageData = list(list(label="under20", infectRisk=0.1308),
                list(label="60s", infectRisk=0.0939),
                list(label="70s", infectRisk=0.0506),
                list(label="over80", infectRisk=0.0700))
+
+marginalization = read_csv("ref/data/marginalization.csv", col_types=cols())
 
 ###########################################################################################
 # Simulation initialization ###############################################################
@@ -48,12 +49,19 @@ sim_make_agents = function(strategy="random", priorityOrder=NULL, scaleFactor=1)
     
     constants = filter(reference, AgeGroup == age)
     
-    # Generate new agents
+    # Number of new agents in age group
     nAgents = round(constants$Population / scaleFactor)
     
+    # Initial states
     stateCounts = round(pull(caseStatus, age) / scaleFactor)
     states = sample(c(rep(0, nAgents - sum(stateCounts)), rep(1:26, stateCounts)))
     
+    # Marginalization levels
+    margCSDs = marginalization %>%
+      slice_sample(n=nAgents, weight_by=marginalization[[age]], replace=TRUE) %>%
+      select(Deprivation, DeprivationModifier)
+    
+    # Generate new agents
     newAgents = tibble(UID = rep.int(0, nAgents),
                        AgeGroup = rep.int(age, nAgents),
                        State = states,
@@ -61,7 +69,10 @@ sim_make_agents = function(strategy="random", priorityOrder=NULL, scaleFactor=1)
                        Infections = rep(0, nAgents),
                        Ticket = rep.int(0, nAgents),
                        Vax = rep.int(0, nAgents),
-                       InfectionWeight = rep(infectRisk, nAgents))
+                       InfectionWeight = rep(infectRisk, nAgents),
+                       Deprivation = margCSDs$Deprivation,
+                       DeprivationModifier = margCSDs$DeprivationModifier) %>%
+      mutate(InfectionWeight = InfectionWeight * DeprivationModifier)
     
     # Add new agents to simulation
     agents = rbind(agents, newAgents)
@@ -73,6 +84,8 @@ sim_make_agents = function(strategy="random", priorityOrder=NULL, scaleFactor=1)
   switch(strategy,
     ageDesc = {agents = arrange(agents, desc(row_number()))},
     ageAsc = {agents = arrange(agents, row_number())},
+    depDesc = {agents = agents %>% slice_sample(n=totalAgents) %>% arrange(desc(Deprivation))},
+    depAsc = {agents = agents %>% slice_sample(n=totalAgents) %>% arrange(Deprivation)},
     custom = {agents = custom_priority(agents, priorityOrder)},
     {agents = slice_sample(agents, n=totalAgents)}
   )
@@ -140,8 +153,8 @@ sim_iter = function(doses, vaxEff, vaxPartialEff, strategy, simState, scaleFacto
   if (doses != 0){
     # Get number of doses to be distributed this week
     nDoses = NULL
-    if (strategy == "One Dose") { nDoses = rpois(1, round(doses / scaleFactor)) } # One-shot strategy
-    else { nDoses = rpois(1, round(doses / (2*scaleFactor))) } # Two-dose strategy
+    if (strategy == "One Dose") { nDoses = rpois(1, ceiling(doses / scaleFactor)) } # One-shot strategy
+    else { nDoses = rpois(1, ceiling(doses / (2*scaleFactor))) } # Two-dose strategy
     
     # First doses
     toFirstDose = simState %>% # Grab highest-priority uninfected persons without previous vaccination
@@ -175,7 +188,7 @@ sim_iter = function(doses, vaxEff, vaxPartialEff, strategy, simState, scaleFacto
 sim_results = function(state, results, iter, scaleFactor=1){
   
   # Get current totals per age group from simulation state
-  iterResults = state %>%
+  ageResults = state %>%
     group_by(AgeGroup) %>%
     summarize(Cases = sum(Infections),
               Deaths = sum(State == -2),
@@ -185,7 +198,20 @@ sim_results = function(state, results, iter, scaleFactor=1){
               Immune = sum(State %in% 1:24),
               .groups="drop") %>%
     arrange(factor(AgeGroup, levels=c("under20", "20s", "30s", "40s", "50s", "60s", "70s", "over80")))
-  newTotals = c(iterResults$Cases, iterResults$Deaths, iterResults$FullVax, iterResults$PartVax, iterResults$Active, iterResults$Immune) * scaleFactor
+  
+  # Get current totals per marginalization level from simulation state
+  depResults = state %>%
+    group_by(Deprivation) %>%
+    summarize(Cases = sum(Infections),
+              Deaths = sum(State == -2),
+              FullVax = sum(Vax == 6),
+              PartVax = sum(Vax %in% 1:5),
+              Active = sum(State %in% c(25, 26)),
+              Immune = sum(State%in% 1:24),
+              .groups="drop")
+  
+  newTotals = c(ageResults$Cases, ageResults$Deaths, ageResults$FullVax, ageResults$PartVax, ageResults$Active, ageResults$Immune,
+                depResults$Cases, depResults$Deaths, depResults$FullVax, depResults$PartVax, depResults$Active, depResults$Immune) * scaleFactor
   
   # Update simulation results
   results = rbind(results, c(iter, newTotals))
@@ -207,6 +233,20 @@ sim_immuneByAge = function(state, ages){
     filter(AgeGroup == ages) %>%
     summarize(Immune = sum(State %in% 1:24)) %>%
     pull(Immune)
+}
+
+sim_activeByDeprivation = function(state, depLevel){
+  state %>%
+    filter(Deprivation == depLevel) %>%
+    summarize(Active = sum(State %in% c(26, 25))) %>%
+    pull(Active)
+}
+
+sim_immuneByDeprivation = function(state, depLevel){
+  state %>%
+    filter(Deprivation == depLevel) %>%
+    summarize(Active = sum(State %in% 1:24)) %>%
+    pull(Active)
 }
 
 ###########################################################################################
