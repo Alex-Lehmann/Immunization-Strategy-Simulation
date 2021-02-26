@@ -799,7 +799,7 @@ shinyServer(function(input, output, session){
                        `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) # For legend order
         } else {
             df = values$results %>%
-                select(Date, matches("Partialvax.*[[:digit:]]*s$|FullVax.*0$")) %>%
+                select(Date, matches("Partialvax.*[[:digit:]]*s$|PartialVax.*0$")) %>%
                 pivot_longer(!Date, names_to="AgeGroup", values_to="Total Vaccinations") %>%
                 mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
                        AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
@@ -838,7 +838,7 @@ shinyServer(function(input, output, session){
                        `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) # For legend order
         } else {
             df = values$results %>%
-                select(Date, matches("Partialvax.*[[:digit:]]*s$|FullVax.*0$")) %>%
+                select(Date, matches("Partialvax.*[[:digit:]]*s$|PartialVax.*0$")) %>%
                 mutate(across(starts_with("PartialVax"), function(x){ c(NA, diff(x)) })) %>%
                 pivot_longer(!Date, names_to="AgeGroup", values_to="New Vaccinations") %>%
                 mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
