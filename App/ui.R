@@ -54,7 +54,7 @@ shinyUI(fluidPage(
                                                                                     tabPanelBody(NULL, value="vax",
                                                                                                  HTML("<h3>Provincial Vaccine Availability</h3>
                                                                                                       <h4>Vaccine Doses Per Week</h4>
-                                                                                                      <p>This parameter controls the mean number of vaccine doses administered per week. Passing a value of 0 results in a simulation with no vaccinations.<br>
+                                                                                                      <p>This parameter controls the mean number of vaccine doses administered per week. This value must be greater than or equal to the Agent Scaling Factor. Passing a value of 0 results in a simulation with no vaccinations.<br>
                                                                                                       <h4>Full Efficacy</h4>
                                                                                                       <p>Use this parameter to set the efficacy of the vaccine <i>after two doses</i>. An agent who is exposed to SARS-CoV-2 after two doses of vaccine will be protected from infection according to the selected value of this parameter.<br>
                                                                                                       <h4>Partial Efficacy</h4>

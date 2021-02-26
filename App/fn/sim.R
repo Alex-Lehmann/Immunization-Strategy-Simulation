@@ -153,8 +153,8 @@ sim_iter = function(doses, vaxEff, vaxPartialEff, strategy, simState, scaleFacto
   if (doses != 0){
     # Get number of doses to be distributed this week
     nDoses = NULL
-    if (strategy == "One Dose") { nDoses = rpois(1, round(doses / scaleFactor)) } # One-shot strategy
-    else { nDoses = rpois(1, round(doses / (2*scaleFactor))) } # Two-dose strategy
+    if (strategy == "One Dose") { nDoses = rpois(1, ceiling(doses / scaleFactor)) } # One-shot strategy
+    else { nDoses = rpois(1, ceiling(doses / (2*scaleFactor))) } # Two-dose strategy
     
     # First doses
     toFirstDose = simState %>% # Grab highest-priority uninfected persons without previous vaccination

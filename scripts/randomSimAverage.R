@@ -57,7 +57,7 @@ runSim = function(nSims){
 }
 
 # Run simulations
-clusterResults = bind_rows(clusterCall(c1, runSim, nSims=10)) %>%
+clusterResults = bind_rows(clusterCall(c1, runSim, nSims=1000)) %>%
   mutate(Date = as_date("2021-01-01") + (7*Iteration))
 
 # Close cluster

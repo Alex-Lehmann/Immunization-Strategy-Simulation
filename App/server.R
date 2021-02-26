@@ -37,8 +37,8 @@ shinyServer(function(input, output, session){
         values$metricDeaths = input$metricDeaths
         
         # Validate inputs
-        if (is.na(input$paramVax) | input$paramVax < 0){
-            updateNumericInput(session, "paramVax", value=0)
+        if (is.na(input$paramVax) | input$paramVax < input$paramScaling){
+            updateNumericInput(session, "paramVax", value=input$paramScaling)
         }
         if (is.na(input$paramTrials) | input$paramTrials < 1){
             updateNumericInput(session, "paramTrials", 1)
