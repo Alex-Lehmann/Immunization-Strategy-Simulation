@@ -443,8 +443,9 @@ shinyUI(fluidPage(
                                         ),
                                         tabPanel("Vaccination Strategies",
                                                  tabsetPanel(type="pills",
-                                                             tabPanel("Risk Groups", includeHTML("ref/riskGroups.html")),
-                                                             tabPanel("Target Metric", includeHTML("ref/targetMetric.html"))
+                                                             tabPanel("Target Metric", includeHTML("ref/targetMetric.html")),
+                                                             tabPanel("Age Groups", includeHTML("ref/ageGroups.html")),
+                                                             tabPanel("Material Deprivation Levels", includeHTML("ref/materialDeprivation.html"))
                                                  )
                                         )
                             )
