@@ -1,9 +1,6 @@
 library(tidyverse)
 library(cancensus)
 
-options(cancensus.api_key = "CensusMapper_da948da1cc5bb4e89b2b46b11e08bc0d")
-options(cancensus.cache_path = "App/ref/data/cache")
-
 # Load original data and discard unneeded columns
 marginalization = read_csv("App/ref/data/csd_marg.csv", col_types=cols()) %>%
   select(CSDUID, deprivation_q_CSDUID, ethniccon_q_CSDUID) %>%
@@ -35,12 +32,7 @@ marginalization = full_join(marginalization, csdData)
 deprivationPops = marginalization %>%
   group_by(Deprivation) %>%
   summarize(across(under20:over80, sum), .groups="drop") %>%
-  transmute(Pop = rowSums(across(under20:over80))/100000) %>%
-  pull(Pop)
-ethnicPops = marginalization %>%
-  group_by(EthnicCon) %>%
-  summarize(across(under20:over80, sum), .groups="drop") %>%
-  transmute(Pop = rowSums(across(under20:over80))/100000) %>%
+  transmute(Pop = rowSums(across(under20:over80))) %>%
   pull(Pop)
 
 # Compute proportion of age group population in each CSD
@@ -49,38 +41,22 @@ marginalization = marginalization %>%
 
 # Find infection risk weights by marginalization level
 covidRates = read_csv("App/ref/data/covid_marg.csv", col_types=cols()) %>%
-  mutate(EthnicQ1 = EthnicQ1*ethnicPops[1],
-         EthnicQ2 = EthnicQ2*ethnicPops[2],
-         EthnicQ3 = EthnicQ3*ethnicPops[3],
-         EthnicQ4 = EthnicQ4*ethnicPops[4],
-         EthnicQ5 = EthnicQ5*ethnicPops[5],
-         
-         DepQ1 = DepQ1*deprivationPops[1],
+  mutate(DepQ1 = DepQ1*deprivationPops[1],
          DepQ2 = DepQ2*deprivationPops[2],
          DepQ3 = DepQ3*deprivationPops[3],
          DepQ4 = DepQ4*deprivationPops[4],
          DepQ5 = DepQ5*deprivationPops[5]) %>%
   summarize(across(everything(), sum)) %>%
-  mutate(EthnicSum = rowSums(across(starts_with("Ethnic"), sum)),
-         DepSum = rowSums(across(starts_with("Dep"), sum)),
-         across(starts_with("EthnicQ"), function(x){x / EthnicSum}),
+  mutate(DepSum = rowSums(across(starts_with("Dep"), sum)),
          across(starts_with("DepQ"), function(x){x / DepSum})) %>%
-  select(starts_with("EthnicQ"), starts_with("DepQ"))
+  select(starts_with("DepQ"))
 
 depMerge = tibble(Deprivation = c(1,2,3,4,5),
-                  DeprivationModifier = c(covidRates$EthnicQ1,
-                                          covidRates$EthnicQ2,
-                                          covidRates$EthnicQ3,
-                                          covidRates$EthnicQ4,
-                                          covidRates$EthnicQ5))
-ethnicMerge = tibble(EthnicCon = c(1,2,3,4,5),
-                     EthnicModifier = c(covidRates$DepQ1,
-                                        covidRates$DepQ2,
-                                        covidRates$DepQ3,
-                                        covidRates$DepQ4,
-                                        covidRates$DepQ5))
-marginalization = marginalization %>%
-  left_join(depMerge, by="Deprivation") %>%
-  left_join(ethnicMerge, by="EthnicCon")
+                  DeprivationModifier = c(covidRates$DepQ1,
+                                          covidRates$DepQ2,
+                                          covidRates$DepQ3,
+                                          covidRates$DepQ4,
+                                          covidRates$DepQ5))
+marginalization = left_join(marginalization, depMerge, by="Deprivation")
 
 write.csv(marginalization, "App/ref/data/marginalization.csv", row.names=FALSE)

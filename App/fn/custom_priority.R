@@ -3,7 +3,6 @@ library(tidyverse)
 # Vectors of options for each rank category
 ageOptions = c("under20", "20s", "30s", "40s", "50s", "60s", "70s", "over80")
 deprivationOptions = c("lowestdeprivation", "lowdeprivation", "moderatedeprivation", "highdeprivation", "highestdeprivation")
-ethnicOptions = c("lowestdiversity", "lowdiversity", "moderatediversity", "highdiversity", "highestdiversity")
 
 custom_priority = function(agents, order){
   
@@ -24,10 +23,6 @@ custom_priority = function(agents, order){
       priority = rbind(priority, slice_sample(toAdd, n=nrow(toAdd)))
       agents = filter(agents, Deprivation != trait)
       
-    } else if (attribute %in% ethnicOptions){
-      toAdd = filter(agents, EthnicCon == trait)
-      priority = rbind(priority, slice_sample(toAdd, n=nrow(toAdd)))
-      agents = filter(agents, EthnicCon != trait)
     }
   }
   

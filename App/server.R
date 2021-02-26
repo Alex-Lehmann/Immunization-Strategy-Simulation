@@ -66,14 +66,7 @@ shinyServer(function(input, output, session){
                              FullVax_DeprQ1 = 0, FullVax_DeprQ2 = 0, FullVax_DeprQ3 = 0, FullVax_DeprQ4 = 0, FullVax_DeprQ5 = 0,
                              PartialVax_DeprQ1 = 0, PartialVax_DeprQ2 = 0, PartialVax_DeprQ3 = 0, PartialVax_DeprQ4 = 0, PartialVax_DeprQ5 = 0,
                              Active_DeprQ1 = 0, Active_DeprQ2 = 0, Active_DeprQ3 = 0, Active_DeprQ4 = 0, Active_DeprQ5 = 0,
-                             Immune_DeprQ1 = 0, Immune_DeprQ2 = 0, Immune_DeprQ3 = 0, Immune_DeprQ4 = 0, Immune_DeprQ5 = 0,
-                             
-                             Cases_EthQ1 = 0, Cases_EthQ2 = 0, Cases_EthQ3 = 0, Cases_EthQ4 = 0, Cases_EthQ5 = 0,
-                             Deaths_EthQ1 = 0, Deaths_EthQ2 = 0, Deaths_EthQ3 = 0, Deaths_EthQ4 = 0, Deaths_EthQ5 = 0,
-                             FullVax_EthQ1 = 0, FullVax_EthQ2 = 0, FullVax_EthQ3 = 0, FullVax_EthQ4 = 0, FullVax_EthQ5 = 0,
-                             PartialVax_EthQ1 = 0, PartialVax_EthQ2 = 0, PartialVax_EthQ3 = 0, PartialVax_EthQ4 = 0, PartialVax_EthQ5 = 0,
-                             Active_EthQ1 = 0, Active_EthQ2 = 0, Active_EthQ3 = 0, Active_EthQ4 = 0, Active_EthQ5 = 0,
-                             Immune_EthQ1 = 0, Immune_EthQ2 = 0, Immune_EthQ3 = 0, Immune_EthQ4 = 0, Immune_EthQ5 = 0)
+                             Immune_DeprQ1 = 0, Immune_DeprQ2 = 0, Immune_DeprQ3 = 0, Immune_DeprQ4 = 0, Immune_DeprQ5 = 0)
             
             # Display busy dialog
             show_modal_spinner(spin="swapping-squares", color="#112446", text="Simulating...")
@@ -99,12 +92,6 @@ shinyServer(function(input, output, session){
                              Active_DeprQ4 = sim_activeByDeprivation(agents, "High Deprivation")*input$paramScaling,
                              Active_DeprQ5 = sim_activeByDeprivation(agents, "Highest Deprivation")*input$paramScaling,
                              
-                             Active_EthQ1 = sim_activeByDeprivation(agents, "Least Deprivation")*input$paramScaling,
-                             Active_EthQ2 = sim_activeByDeprivation(agents, "Low Deprivation")*input$paramScaling,
-                             Active_EthQ3 = sim_activeByDeprivation(agents, "Moderate Deprivation")*input$paramScaling,
-                             Active_EthQ4 = sim_activeByDeprivation(agents, "High Deprivation")*input$paramScaling,
-                             Active_EthQ5 = sim_activeByDeprivation(agents, "Highest Deprivation")*input$paramScaling,
-                             
                              Immune_Under20 = sim_immuneByAge(agents, "under20")*input$paramScaling,
                              Immune_20s = sim_immuneByAge(agents, "20s")*input$paramScaling,
                              Immune_30s = sim_immuneByAge(agents, "30s")*input$paramScaling,
@@ -118,13 +105,7 @@ shinyServer(function(input, output, session){
                              Immune_DeprQ2 = sim_immuneByDeprivation(agents, "Low Deprivation")*input$paramScaling,
                              Immune_DeprQ3 = sim_immuneByDeprivation(agents, "Moderate Deprivation")*input$paramScaling,
                              Immune_DeprQ4 = sim_immuneByDeprivation(agents, "High Deprivation")*input$paramScaling,
-                             Immune_DeprQ5 = sim_immuneByDeprivation(agents, "Highest Deprivation")*input$paramScaling,
-                             
-                             Immune_EthQ1 = sim_immuneByEthnicCon(agents, "Least Diversity")*input$paramScaling,
-                             Immune_EthQ2 = sim_immuneByEthnicCon(agents, "Low Diversity")*input$paramScaling,
-                             Immune_EthQ3 = sim_immuneByEthnicCon(agents, "Moderate Diversity")*input$paramScaling,
-                             Immune_EthQ4 = sim_immuneByEthnicCon(agents, "High Diversity")*input$paramScaling,
-                             Immune_EthQ5 = sim_immuneByEthnicCon(agents, "Highest Diversity")*input$paramScaling)
+                             Immune_DeprQ5 = sim_immuneByDeprivation(agents, "Highest Deprivation")*input$paramScaling)
             
             # Run simulation
             for (j in 1:nIter){
@@ -637,93 +618,6 @@ shinyServer(function(input, output, session){
             config(displayModeBar = FALSE)
     })
     
-    # Ethnic concentration
-    output$activeCasesTSbyEth = renderPlotly({
-        df = values$results %>%
-            select(Date = Date, `Lowest Diversity` = Active_EthQ1, `Low Diversity` = Active_EthQ2,
-                   `Moderate Diversity` = Active_EthQ3, `High Diversity` = Active_EthQ4, `Highest Diversity` = Active_EthQ5) %>%
-            pivot_longer(!Date, names_to="DiversityLevel", values_to="Active Cases") %>%
-            mutate(`Diversity Level` = factor(DiversityLevel, levels=c("Lowest Diversity", "Low Diversity", "Moderate Diversity",
-                                                                       "High Diversity", "Highest Diversity")))
-        
-        plot = NULL
-        if (input$activeCasesTSbyDepType == "Stacked Area Plot"){
-            plot = df %>%
-                ggplot(aes(x=Date, y=`Active Cases`, fill=`Diversity Level`)) +
-                geom_area() +
-                scale_fill_manual(values=ptol5)
-        } else {
-            plot = df %>%
-                ggplot(aes(x=Date, y=`Active Cases`, color=`Diversity Level`)) +
-                geom_line() +
-                scale_color_manual(values=ptol5)
-        }
-        
-        ggplotly(plot) %>%
-            layout(legend=list(orientation="h", y=1.1),
-                   xaxis=list(fixedrange=TRUE),
-                   yaxis=list(fixedrange=TRUE)) %>%
-            config(displayModeBar = FALSE)
-    })
-    
-    output$totalCasesTSbyEth = renderPlotly({
-        df = values$results %>%
-            select(Date = Date, `Lowest Diversity` = Cases_EthQ1, `Low Diversity` = Cases_EthQ2,
-                   `Moderate Diversity` = Cases_EthQ3, `High Diversity` = Cases_EthQ4, `Highest Diversity` = Cases_EthQ5) %>%
-            pivot_longer(!Date, names_to="DiversityLevel", values_to="Total Cases") %>%
-            mutate(`Diversity Level` = factor(DiversityLevel, levels=c("Lowest Diversity", "Low Diversity", "Moderate Diversity",
-                                                                       "High Diversity", "Highest Diversity")))
-        
-        plot = NULL
-        if (input$totalCasesTSbyEthType == "Stacked Area Plot"){
-            plot = df %>%
-                ggplot(aes(x=Date, y=`Total Cases`, fill=`Diversity Level`)) +
-                geom_area() +
-                scale_fill_manual(values=ptol5)
-        } else {
-            plot = df %>%
-                ggplot(aes(x=Date, y=`Total Cases`, color=`Diversity Level`)) +
-                geom_line() +
-                scale_color_manual(values=ptol5)
-        }
-        
-        ggplotly(plot) %>%
-            layout(legend=list(orientation="h", y=1.2),
-                   xaxis=list(fixedrange=TRUE),
-                   yaxis=list(fixedrange=TRUE)) %>%
-            config(displayModeBar = FALSE)
-    })
-    
-    output$newCasesTSbyEth = renderPlotly({
-        df = values$results %>%
-            select(Date = Date, `Lowest Diversity` = Cases_EthQ1, `Low Diversity` = Cases_EthQ2,
-                   `Moderate Diversity` = Cases_EthQ3, `High Diversity` = Cases_EthQ4, `Highest Diversity` = Cases_EthQ5) %>%
-            mutate_at(vars(-Date), function(x){c(NA, diff(x))}) %>%
-            drop_na() %>%
-            pivot_longer(!Date, names_to="DiversityLevel", values_to="New Cases") %>%
-            mutate(`Diversity Level` = factor(DiversityLevel, levels=c("Lowest Diversity", "Low Diversity", "Moderate Diversity",
-                                                                       "High Diversity", "Highest Diversity")))
-        
-        plot = NULL
-        if (input$newCasesTSByEthType == "Stacked Area Plot"){
-            plot = df %>%
-                ggplot(aes(x=Date, y=`New Cases`, fill=`Diversity Level`)) +
-                geom_area() +
-                scale_fill_manual(values=ptol5)
-        } else {
-            plot = df %>%
-                ggplot(aes(x=Date, y=`New Cases`, color=`Diversity Level`)) +
-                geom_line() +
-                scale_color_manual(values=ptol5)
-        }
-        
-        ggplotly(plot) %>%
-            layout(legend=list(orientation="h", y=1.2),
-                   xaxis=list(fixedrange=TRUE),
-                   yaxis=list(fixedrange=TRUE)) %>%
-            config(displayModeBar = FALSE)
-    })
-    
     #######################################################################################
     # Case Severity #######################################################################
     
@@ -958,9 +852,7 @@ shinyServer(function(input, output, session){
     # Manual vaccine priority UI elements #################################################
     
     # Reactive rank list
-    output$priorityRankList = renderUI({ rank_list("Higher Priority", "paramRank", labels=c(input$paramAgeGroups,
-                                                                                            input$paramDeprivationGroups,
-                                                                                            input$paramEthnicGroups)) })
+    output$priorityRankList = renderUI({ rank_list("Higher Priority", "paramRank", labels=c(input$paramAgeGroups,input$paramDeprivationGroups)) })
     
     # Event handlers to show modal
     observeEvent(input$paramStrategy,{
@@ -978,10 +870,7 @@ shinyServer(function(input, output, session){
                                        selected=input$paramAgeGroups),
                     checkboxGroupInput("paramDeprivationGroups", "Material deprivation level(s):", inline=TRUE,
                                        c("Lowest Deprivation", "Low Deprivation", "Moderate Deprivation", "High Deprivation", "Highest Deprivation"),
-                                       select=input$paramDeprivationGroups),
-                    checkboxGroupInput("paramEthnicGroups", "Neighbourhood diversity level(s):", inline=TRUE,
-                                       c("Lowest Diversity", "Low Diversity", "Moderate Diversity", "High Diversity", "Highest Diversity"),
-                                       select=input$paramEthnicGroups)
+                                       select=input$paramDeprivationGroups)
         )
     }
     

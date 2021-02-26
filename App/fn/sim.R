@@ -56,10 +56,10 @@ sim_make_agents = function(strategy="random", priorityOrder=NULL, scaleFactor=1)
     stateCounts = round(pull(caseStatus, age) / scaleFactor)
     states = sample(c(rep(0, nAgents - sum(stateCounts)), rep(1:26, stateCounts)))
     
-    # Geographic location and marginalization levels
+    # Marginalization levels
     margCSDs = marginalization %>%
       slice_sample(n=nAgents, weight_by=marginalization[[age]], replace=TRUE) %>%
-      select(Deprivation, EthnicCon, DeprivationModifier, EthnicModifier)
+      select(Deprivation, DeprivationModifier)
     
     # Generate new agents
     newAgents = tibble(UID = rep.int(0, nAgents),
@@ -71,10 +71,8 @@ sim_make_agents = function(strategy="random", priorityOrder=NULL, scaleFactor=1)
                        Vax = rep.int(0, nAgents),
                        InfectionWeight = rep(infectRisk, nAgents),
                        Deprivation = margCSDs$Deprivation,
-                       EthnicCon = margCSDs$EthnicCon,
-                       DeprivationModifier = margCSDs$DeprivationModifier,
-                       EthnicModifier = margCSDs$EthnicModifier) %>%
-      mutate(InfectionWeight = InfectionWeight * DeprivationModifier * EthnicModifier)
+                       DeprivationModifier = margCSDs$DeprivationModifier) %>%
+      mutate(InfectionWeight = InfectionWeight * DeprivationModifier)
     
     # Add new agents to simulation
     agents = rbind(agents, newAgents)
@@ -86,8 +84,6 @@ sim_make_agents = function(strategy="random", priorityOrder=NULL, scaleFactor=1)
   switch(strategy,
     ageDesc = {agents = arrange(agents, desc(row_number()))},
     ageAsc = {agents = arrange(agents, row_number())},
-    ethDesc = {agents = agents %>% slice_sample(n=totalAgents) %>% arrange(desc(EthnicCon))},
-    ethAsc = {agents = agents %>% slice_sample(n=totalAgents) %>% arrange(EthnicCon)},
     depDesc = {agents = agents %>% slice_sample(n=totalAgents) %>% arrange(desc(Deprivation))},
     depAsc = {agents = agents %>% slice_sample(n=totalAgents) %>% arrange(Deprivation)},
     custom = {agents = custom_priority(agents, priorityOrder)},
@@ -213,19 +209,9 @@ sim_results = function(state, results, iter, scaleFactor=1){
               Active = sum(State %in% c(25, 26)),
               Immune = sum(State%in% 1:24),
               .groups="drop")
-  ethResults = state %>%
-    group_by(EthnicCon) %>%
-    summarize(Cases = sum(Infections),
-              Deaths = sum(State == -2),
-              FullVax = sum(Vax == 6),
-              PartVax = sum(Vax %in% 1:5),
-              Active = sum(State %in% c(25, 26)),
-              Immune = sum(State%in% 1:24),
-              .groups="drop")
   
   newTotals = c(ageResults$Cases, ageResults$Deaths, ageResults$FullVax, ageResults$PartVax, ageResults$Active, ageResults$Immune,
-                depResults$Cases, depResults$Deaths, depResults$FullVax, depResults$PartVax, depResults$Active, depResults$Immune,
-                ethResults$Cases, ethResults$Deaths, ethResults$FullVax, ethResults$PartVax, ethResults$Active, ethResults$Immune) * scaleFactor
+                depResults$Cases, depResults$Deaths, depResults$FullVax, depResults$PartVax, depResults$Active, depResults$Immune) * scaleFactor
   
   # Update simulation results
   results = rbind(results, c(iter, newTotals))
@@ -259,20 +245,6 @@ sim_activeByDeprivation = function(state, depLevel){
 sim_immuneByDeprivation = function(state, depLevel){
   state %>%
     filter(Deprivation == depLevel) %>%
-    summarize(Active = sum(State %in% 1:24)) %>%
-    pull(Active)
-}
-
-sim_activeByEthnicCon = function(state, conLevel){
-  state %>%
-    filter(EthnicCon == conLevel) %>%
-    summarize(Active = sum(State %in% c(26, 25))) %>%
-    pull(Active)
-}
-
-sim_immuneByEthnicCon = function(state, conLevel){
-  state %>%
-    filter(EthnicCon == conLevel) %>%
     summarize(Active = sum(State %in% 1:24)) %>%
     pull(Active)
 }

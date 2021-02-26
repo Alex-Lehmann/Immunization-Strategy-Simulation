@@ -62,16 +62,18 @@ shinyUI(fluidPage(
                                                                                     ),
                                                                                     tabPanelBody(NULL, value="strategy",
                                                                                                  HTML("<h3>Distribution Strategy</h3>
-                                                                                                      <h4>Presets</h4>
-                                                                                                      <p>Select pre-built vaccine distribution strategies from this menu. The currently-supported presets are:
+                                                                                                      <h4>Vaccination Priority</h4>
+                                                                                                      <p>Select vaccine priority strategies from this menu. The currently-supported choices are:
                                                                                                       <ul>
                                                                                                         <li><b>Age (Oldest First):</b> Vaccine distribution will prioritize individuals in older age groups.</li>
                                                                                                         <li><b>Age (Youngest First):</b> Vaccine distribution will prioritize individuals in younger age groups.</li>
+                                                                                                        <li><b>Material Deprivation (High to Low):</b> Vaccine distribution will prioritize individuals residing in areas with high material deprivation levels, as determined by the 2016 Ontario Marginalization Index.</li>
+                                                                                                        <li><b>Material Deprivation (Low to High):</b> Vaccine distribution will prioritize individuals residing in areas with low material deprivations levels, as determined by the 2016 Ontario Marginalization Index.</li>
                                                                                                         <li><b>Random:</b> Vaccines are distributed randomly with no priority given to any group.</li>
                                                                                                         <li><b>User-Defined:</b> Users may define their own vaccination strategies by selecting their groups of interest and ordering to establish priority. Non-prioritized groups will be vaccinated randomly after the priority groups.</li>
                                                                                                       </ul>
                                                                                                       <h4>Number of Doses Per Patient</h4>
-                                                                                                      <p>This choice determines how many doses of vaccine each agent may receive. A one-dose strategy will result in all agents receiving a only single dose while a two-dose strategy will result in all agents receiving a second dose after 4 weeks.<br>")
+                                                                                                      <p>This choice determines how many doses of vaccine each agent may receive. A one-dose strategy will result in all persons receiving a only single dose while a two-dose strategy will result in all persons receiving a second dose after 4 weeks.<br>")
                                                                                     ),
                                                                                     tabPanelBody(NULL, value="sim",
                                                                                                  HTML("<h3>Simulation Settings</h3>
@@ -251,32 +253,8 @@ shinyUI(fluidPage(
                                                                                                                               plotlyOutput("newCasesTSbyDep")
                                                                                                                         ),
                                                                                                                    )
-                                                                                                          ),
-                                                                                                          
-                                                                                                          tabPanel("Ethnically Diverse Neighbourhoods",
-                                                                                                                   titlePanel(HTML("<h2>Time Series of Cases, By Neighbourhood Ethnic Diversity")),
-                                                                                                                   
-                                                                                                                   titlePanel(HTML("<h3>Active Cases</h3>")),
-                                                                                                                   radioButtons("activeCasesTSbyEthType", "Display as:", inline=TRUE,
-                                                                                                                                c("Stacked Area Plot", "Line Plot")),
-                                                                                                                   plotlyOutput("activeCasesTSbyEth"),
-                                                                                                                   
-                                                                                                                   fluidRow(
-                                                                                                                       column(width=6, align="center",
-                                                                                                                              titlePanel(HTML("<h3>Cumulative Cases</h3>")),
-                                                                                                                              radioButtons("totalCasesTSbyEthType", "Display as:", inline=TRUE,
-                                                                                                                                           c("Stacked Area Plot", "Line Plot")),
-                                                                                                                              plotlyOutput("totalCasesTSbyEth")
-                                                                                                                       ),
-                                                                                                                       column(width=6, align="center",
-                                                                                                                              titlePanel(HTML("<h3>New Cases</h3>")),
-                                                                                                                              radioButtons("newCasesTSByEthType", "Display as:", inline=TRUE,
-                                                                                                                                           c("Stacked Area Plot", "Line Plot"), selected="Line Plot"),
-                                                                                                                              plotlyOutput("newCasesTSbyEth")
-                                                                                                                       )
-                                                                                                                   )
                                                                                                           )
-                                                                                                      ),
+                                                                                                      )
                                                                                              ),
                                                                                              
                                                                                              # Detailed mortality results
@@ -388,8 +366,6 @@ shinyUI(fluidPage(
                                                                    selectInput("paramStrategy", "Vaccination Priority",
                                                                                list("Age (Oldest First)" = "ageDesc",
                                                                                     "Age (Youngest First)" = "ageAsc",
-                                                                                    "Ethnic Diversity (High to Low)" = "ethDesc",
-                                                                                    "Ethnic Diversity (Low to High)" = "ethAsc",
                                                                                     "Material Deprivation (High to Low)" = "depDesc",
                                                                                     "Material Deprivation (Low to High)" = "depAsc",
                                                                                     "Random" = "random",
