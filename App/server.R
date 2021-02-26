@@ -789,13 +789,22 @@ shinyServer(function(input, output, session){
     
     # Age group
     output$totalFullVaxTSbyAge = renderPlotly({
-        
-        df = values$results %>%
-            select(Date, matches("FullVax.*[[:digit:]]*s$|FullVax.*0$")) %>%
-            pivot_longer(!Date, names_to="AgeGroup", values_to="Total Vaccinations") %>%
-            mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
-                   AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
-                   `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) # For legend order
+        df = NULL
+        if (values$paramDoses == "Two Doses"){
+            df = values$results %>%
+                select(Date, matches("FullVax.*[[:digit:]]*s$|FullVax.*0$")) %>%
+                pivot_longer(!Date, names_to="AgeGroup", values_to="Total Vaccinations") %>%
+                mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
+                       AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
+                       `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) # For legend order
+        } else {
+            df = values$results %>%
+                select(Date, matches("Partialvax.*[[:digit:]]*s$|FullVax.*0$")) %>%
+                pivot_longer(!Date, names_to="AgeGroup", values_to="Total Vaccinations") %>%
+                mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
+                       AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
+                       `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) # For legend order
+        }
         
         plot = NULL
         if (input$totalVaxTSbyAgeType == "Stacked Area Plot"){
@@ -818,15 +827,24 @@ shinyServer(function(input, output, session){
     })
     
     output$newFullVaxTSbyAge = renderPlotly({
-        
-        df = values$results %>%
-            select(Date, matches("FullVax.*[[:digit:]]*s$|FullVax.*0$")) %>%
-            mutate(across(starts_with("FullVax"), function(x){ c(NA, diff(x)) })) %>%
-            filter(Date > as_date("2021-01-01")) %>%
-            pivot_longer(!Date, names_to="AgeGroup", values_to="New Vaccinations") %>%
-            mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
-                   AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
-                   `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) # For legend order
+        df = NULL
+        if (values$paramDoses == "Two Doses"){
+            df = values$results %>%
+                select(Date, matches("FullVax.*[[:digit:]]*s$|FullVax.*0$")) %>%
+                mutate(across(starts_with("FullVax"), function(x){ c(NA, diff(x)) })) %>%
+                pivot_longer(!Date, names_to="AgeGroup", values_to="New Vaccinations") %>%
+                mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
+                       AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
+                       `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) # For legend order
+        } else {
+            df = values$results %>%
+                select(Date, matches("Partialvax.*[[:digit:]]*s$|FullVax.*0$")) %>%
+                mutate(across(starts_with("PartialVax"), function(x){ c(NA, diff(x)) })) %>%
+                pivot_longer(!Date, names_to="AgeGroup", values_to="New Vaccinations") %>%
+                mutate(AgeGroup = str_extract(AgeGroup, "(?<=_).*"),
+                       AgeGroup = str_replace_all(AgeGroup, pattern="r", replacement="r "),
+                       `Age Group` = factor(AgeGroup, levels=c("Under 20", "20s", "30s", "40s", "50s", "60s", "70s", "Over 80"))) # For legend order
+        }
         
         plot = NULL
         if (input$newVaxTSbyAgeType == "Stacked Area Plot"){
