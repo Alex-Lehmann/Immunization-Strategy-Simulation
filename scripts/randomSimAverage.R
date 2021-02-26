@@ -4,7 +4,7 @@
 library(tidyverse)
 library(lubridate)
 library(snow)
-source("fn/sim.R")
+source("../fn/sim.R")
 
 # Initalize computing cluster
 nCores = 10
@@ -14,7 +14,7 @@ c1 = makeCluster(nCores, "SOCK")
 runSim = function(nSims){
   library(tidyverse)
   library(lubridate)
-  source("fn/sim.R")
+  source("../fn/sim.R")
   
   overallResults = NULL
   for (i in 1:nSims){
@@ -68,9 +68,9 @@ clusterResults %>%
   select(Date, Cases) %>%
   group_by(Date) %>%
   summarize(Reference = mean(Cases)) %>%
-  write.csv("ref/data/refCases.csv", row.names=FALSE)
+  write.csv("../ref/data/refCases.csv", row.names=FALSE)
 clusterResults %>%
   select(Date, Deaths) %>%
   group_by(Date) %>%
   summarize(Reference = mean(Deaths)) %>%
-  write.csv("ref/data/refDeaths.csv", row.names=FALSE)
+  write.csv("../ref/data/refDeaths.csv", row.names=FALSE)
