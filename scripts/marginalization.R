@@ -2,7 +2,7 @@ library(tidyverse)
 library(cancensus)
 
 # Load original data and discard unneeded columns
-marginalization = read_csv("App/ref/data/csd_marg.csv", col_types=cols()) %>%
+marginalization = read_csv("ref/data/csd_marg.csv", col_types=cols()) %>%
   select(CSDUID, deprivation_q_CSDUID, ethniccon_q_CSDUID) %>%
   drop_na() %>%
   rename(Deprivation = deprivation_q_CSDUID, EthnicCon = ethniccon_q_CSDUID)
@@ -40,7 +40,7 @@ marginalization = marginalization %>%
   mutate(across(under20:over80, function(x){x/sum(x)}))
 
 # Find infection risk weights by marginalization level
-covidRates = read_csv("App/ref/data/covid_marg.csv", col_types=cols()) %>%
+covidRates = read_csv("ref/data/covid_marg.csv", col_types=cols()) %>%
   mutate(DepQ1 = DepQ1*deprivationPops[1],
          DepQ2 = DepQ2*deprivationPops[2],
          DepQ3 = DepQ3*deprivationPops[3],
@@ -59,4 +59,4 @@ depMerge = tibble(Deprivation = c(1,2,3,4,5),
                                           covidRates$DepQ5))
 marginalization = left_join(marginalization, depMerge, by="Deprivation")
 
-write.csv(marginalization, "App/ref/data/marginalization.csv", row.names=FALSE)
+write.csv(marginalization, "ref/data/marginalization.csv", row.names=FALSE)

@@ -1,0 +1,67 @@
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="fluid-row" id="header">
+
+
+
+
+</div>
+
+
+<p>The problem of determining the most important target of a vaccination strategy goes beyond the bounds of statistics and into the realm of politics. We, accordingly, did not feel that it was our place to declare what in particular a “best” approach should seek to accomplish. Instead, we allow the simulation user to define their own priorities for the outcome according to the formula <span class="math display">\[
+T = 100 \times (P_CR_C + P_DR_D)
+\]</span> where <span class="math inline">\(T\)</span> is the target metric, <span class="math inline">\(P_C\)</span> and <span class="math inline">\(P_D\)</span>, <span class="math inline">\(0 \leq P_C, P_D \leq 1\)</span>, are the user-selected weights for improving case load and mortality, respectively, and <span class="math inline">\(R_C\)</span> and <span class="math inline">\(R_D\)</span> are the percent reductions in cases and deaths, respectively, compared to an average simulation with no vaccination. This statistic represents a weighted percent improvement in pandemic handling compared to a scenario where no vaccines are distributed.</p>
+<p>The reference “average simulation” was determined by simulating the pandemic’s progression without vaccine intervention 10,000 times and finding the mean number of total cases and total deaths.</p>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
